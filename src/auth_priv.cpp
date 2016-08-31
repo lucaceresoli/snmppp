@@ -1,30 +1,30 @@
 /*_############################################################################
-  _## 
-  _##  auth_priv.cpp  
+  _##
+  _##  auth_priv.cpp
   _##
   _##  SNMP++ v3.3
   _##  -----------------------------------------------
   _##  Copyright (c) 2001-2013 Jochen Katz, Frank Fock
   _##
   _##  This software is based on SNMP++2.6 from Hewlett Packard:
-  _##  
+  _##
   _##    Copyright (c) 1996
   _##    Hewlett-Packard Company
-  _##  
+  _##
   _##  ATTENTION: USE OF THIS SOFTWARE IS SUBJECT TO THE FOLLOWING TERMS.
-  _##  Permission to use, copy, modify, distribute and/or sell this software 
-  _##  and/or its documentation is hereby granted without fee. User agrees 
-  _##  to display the above copyright notice and this license notice in all 
-  _##  copies of the software and any documentation of the software. User 
-  _##  agrees to assume all liability for the use of the software; 
-  _##  Hewlett-Packard and Jochen Katz make no representations about the 
-  _##  suitability of this software for any purpose. It is provided 
-  _##  "AS-IS" without warranty of any kind, either express or implied. User 
+  _##  Permission to use, copy, modify, distribute and/or sell this software
+  _##  and/or its documentation is hereby granted without fee. User agrees
+  _##  to display the above copyright notice and this license notice in all
+  _##  copies of the software and any documentation of the software. User
+  _##  agrees to assume all liability for the use of the software;
+  _##  Hewlett-Packard and Jochen Katz make no representations about the
+  _##  suitability of this software for any purpose. It is provided
+  _##  "AS-IS" without warranty of any kind, either express or implied. User
   _##  hereby grants a royalty-free license to any and all derivatives based
-  _##  upon this software code base. 
-  _##  
+  _##  upon this software code base.
+  _##
   _##########################################################################*/
-char auth_priv_version[]="@(#) SNMP++ $Id: auth_priv.cpp 2839 2015-04-25 20:23:21Z katz $";
+char auth_priv_version[]="@(#) SNMP++ $Id: auth_priv.cpp 2999 2016-02-04 20:46:55Z katz $";
 
 #include <libsnmp.h>
 
@@ -67,6 +67,8 @@ char auth_priv_version[]="@(#) SNMP++ $Id: auth_priv.cpp 2839 2015-04-25 20:23:2
 #include "snmp_pp/snmperrs.h"
 #include "snmp_pp/address.h"
 #include "snmp_pp/log.h"
+
+#include <memory>
 
 #ifdef SNMP_PP_NAMESPACE
 namespace Snmp_pp {
@@ -663,27 +665,27 @@ int AuthPriv::get_keychange_value(const int       auth_prot,
       unsigned char digest[SNMPv3_USM_MAX_KEY_LEN];
       memset((char*)digest, 0, SNMPv3_USM_MAX_KEY_LEN);
       tmp += random;
-      debughexcprintf(21, "loop tmp1", tmp.data(), tmp.len());
+      //debughexcprintf(21, "loop tmp1", tmp.data(), tmp.len());
       a->hash(tmp.data(), tmp.len(), digest);
       tmp.set_data(digest, a->get_hash_len());
-      debughexcprintf(21, "loop tmp2", tmp.data(), tmp.len());
+      //debughexcprintf(21, "loop tmp2", tmp.data(), tmp.len());
       delta.set_len(delta.len() + a->get_hash_len());
       for (int kk=0; kk < a->get_hash_len(); kk++)
           delta[k * a->get_hash_len() + kk]
               = tmp[kk] ^ new_key[k * a->get_hash_len() + kk];
-      debughexcprintf(21, "loop delta", delta.data(), delta.len());
+      //debughexcprintf(21, "loop delta", delta.data(), delta.len());
   }
 
   unsigned char digest[SNMPv3_USM_MAX_KEY_LEN];
   memset((char*)digest, 0, SNMPv3_USM_MAX_KEY_LEN);
   tmp += random;
-  debughexcprintf(21, " tmp1", tmp.data(), tmp.len());
+  //debughexcprintf(21, " tmp1", tmp.data(), tmp.len());
   a->hash(tmp.data(), tmp.len(), digest);
   tmp.set_data(digest, key_len - delta.len());
-  debughexcprintf(21, " tmp2", tmp.data(), tmp.len());
+  //debughexcprintf(21, " tmp2", tmp.data(), tmp.len());
   for (unsigned int j = 0; j < tmp.len(); j++)
       tmp[j] = tmp[j] ^ new_key[iterations * a->get_hash_len() + j];
-  debughexcprintf(21, " tmp3", tmp.data(), tmp.len());
+  //debughexcprintf(21, " tmp3", tmp.data(), tmp.len());
 
   keychange_value = random;
   keychange_value += delta;
@@ -859,6 +861,46 @@ int AuthPriv::add_default_modules()
     ret = SNMP_CLASS_ERROR;
   }
 
+#if defined(_USE_OPENSSL)
+
+  if (add_auth(new AuthHMAC128SHA224()) != SNMP_ERROR_SUCCESS)
+  {
+    LOG_BEGIN(loggerModuleName, ERROR_LOG | 1);
+    LOG("AuthPriv: Could not add default protocol AuthHMAC128SHA224.");
+    LOG_END;
+
+    ret = SNMP_CLASS_ERROR;
+  }
+
+  if (add_auth(new AuthHMAC192SHA256()) != SNMP_ERROR_SUCCESS)
+  {
+    LOG_BEGIN(loggerModuleName, ERROR_LOG | 1);
+    LOG("AuthPriv: Could not add default protocol AuthHMAC192SHA256.");
+    LOG_END;
+
+    ret = SNMP_CLASS_ERROR;
+  }
+
+  if (add_auth(new AuthHMAC256SHA384()) != SNMP_ERROR_SUCCESS)
+  {
+    LOG_BEGIN(loggerModuleName, ERROR_LOG | 1);
+    LOG("AuthPriv: Could not add default protocol AuthHMAC256SHA384.");
+    LOG_END;
+
+    ret = SNMP_CLASS_ERROR;
+  }
+
+  if (add_auth(new AuthHMAC384SHA512()) != SNMP_ERROR_SUCCESS)
+  {
+    LOG_BEGIN(loggerModuleName, ERROR_LOG | 1);
+    LOG("AuthPriv: Could not add default protocol AuthHMAC384SHA512.");
+    LOG_END;
+
+    ret = SNMP_CLASS_ERROR;
+  }
+
+#endif
+
   if (add_auth(new AuthMD5()) != SNMP_ERROR_SUCCESS)
   {
     LOG_BEGIN(loggerModuleName, ERROR_LOG | 1);
@@ -927,7 +969,6 @@ int AuthPriv::add_default_modules()
     ret = SNMP_CLASS_ERROR;
   }
 #endif
-
 
   if (ret == SNMP_CLASS_SUCCESS)
   {
@@ -1011,194 +1052,6 @@ int AuthPriv::auth_inc_msg(const int            auth_prot,
 }
 
 /* ========================================================== */
-
-/* ----------------------- AuthSHA ---------------------------------------*/
-
-int AuthSHA::password_to_key(const unsigned char *password,
-                             const unsigned int   password_len,
-                             const unsigned char *engine_id,
-                             const unsigned int   engine_id_len,
-                             unsigned char *key,
-                             unsigned int *key_len)
-{
-  *key_len = 20; /* All SHA keys have 20 bytes length */
-
-#ifdef __DEBUG
-  debugprintf(5,"password_to_key SHA: password: (%s).",
-              OctetStr(password, password_len).get_printable());
-  debugprintf(5,"password_to_key SHA: engine_id: (%s).",
-              OctetStr(engine_id, engine_id_len).get_printable());
-#endif
-
-  SHAHashStateType sha_hash_state;
-  unsigned char *cp, password_buf[72];
-  unsigned long  password_index = 0;
-  unsigned long  count = 0, i;
-
-  SHA1_INIT(&sha_hash_state);   /* initialize SHA */
-
-  /**********************************************/
-  /* Use while loop until we've done 1 Megabyte */
-  /**********************************************/
-  while (count < 1048576) {
-    cp = password_buf;
-    for (i = 0; i < 64; i++) {
-      /*************************************************/
-      /* Take the next octet of the password, wrapping */
-      /* to the beginning of the password as necessary.*/
-      /*************************************************/
-      *cp++ = password[password_index++ % password_len];
-    }
-
-    SHA1_PROCESS(&sha_hash_state, password_buf, 64);
-    count += 64;
-  }
-
-  SHA1_DONE(&sha_hash_state, key);          /* tell SHA we're done */
-
-#ifdef __DEBUG
-  debughexcprintf(21, "key", key, *key_len);
-#endif
-
-  /*****************************************************/
-  /* Now localize the key with the engine_id and pass  */
-  /* through SHA to produce final key                  */
-  /* May want to ensure that engine_id_len <= 32,      */
-  /* otherwise need to use a buffer larger than 72     */
-  /*****************************************************/
-  memcpy(password_buf,                            key,       *key_len);
-  memcpy(password_buf + *key_len,                 engine_id, engine_id_len);
-  memcpy(password_buf + *key_len + engine_id_len, key,       *key_len);
-
-  SHA1_INIT(&sha_hash_state);
-  SHA1_PROCESS(&sha_hash_state, password_buf, (2 * *key_len) + engine_id_len);
-  SHA1_DONE(&sha_hash_state, key);
-
-#ifdef __DEBUG
-  debughexcprintf(21, "localized key", key, *key_len);
-#endif
-
-  return SNMPv3_USM_OK;
-}
-
-int AuthSHA::hash(const unsigned char *data,
-                  const unsigned int   data_len,
-                  unsigned char       *digest) const
-{
-  SHAHashStateType sha_hash_state;
-
-  SHA1_INIT(&sha_hash_state);
-  SHA1_PROCESS(&sha_hash_state, data, data_len);
-  SHA1_DONE(&sha_hash_state, digest);
-
-  return SNMPv3_USM_OK;
-}
-
-int AuthSHA::auth_out_msg(const unsigned char *key,
-                          unsigned char *msg,
-                          const int msg_len,
-                          unsigned char *auth_par_ptr)
-{
-  SHAHashStateType sha_hash_state;
-  int           key_len = 20; /* We use only 20 Byte Key! */
-  unsigned char digest[20];
-  unsigned char k_ipad[65];   /* inner padding - key XORd with ipad */
-  unsigned char k_opad[65];   /* outer padding - key XORd with opad */
-
-  memset((char*)(auth_par_ptr), 0, 12);
-
-#ifdef __DEBUG
-  debughexcprintf(21, "key", key, 16);
-#endif
-
-  /*
-   * the HMAC_SHA transform looks like:
-   *
-   * SHA(K XOR opad, SHA(K XOR ipad, msg))
-   *
-   * where K is an n byte key
-   * ipad is the byte 0x36 repeated 64 times
-   * opad is the byte 0x5c repeated 64 times
-   * and text is the data being protected
-   */
-
-  /* start out by storing ipads and opads in pads */
-  memset( (char*)k_ipad, 0x36, sizeof k_ipad);
-  memset( (char*)k_opad, 0x5c, sizeof k_opad);
-
-  /* XOR pads with key */
-  for (int i=0; i < key_len; ++i) {
-    k_ipad[i] ^= key[i];
-    k_opad[i] ^= key[i];
-  }
-
-  /* perform inner SHA */
-  SHA1_INIT(&sha_hash_state);           /* init sha_hash_state for 1st pass */
-  SHA1_PROCESS(&sha_hash_state, k_ipad, 64);   /* start with inner pad      */
-  SHA1_PROCESS(&sha_hash_state, msg, msg_len); /* then text of datagram     */
-  SHA1_DONE(&sha_hash_state, digest);          /* finish up 1st pass        */
-  /* perform outer SHA */
-  SHA1_INIT(&sha_hash_state);           /* init sha_hash_state for 2nd pass */
-  SHA1_PROCESS(&sha_hash_state, k_opad, 64);   /* start with outer pad      */
-  SHA1_PROCESS(&sha_hash_state, digest, 20);   /* then results of 1st hash  */
-  SHA1_DONE(&sha_hash_state, digest);          /* finish up 2nd pass        */
-
-#ifdef __DEBUG
-  debughexcprintf(21,"digest", digest, 160 / 8);
-#endif
-
-  memcpy(auth_par_ptr, digest, 12);
-
-  return SNMPv3_USM_OK;
-}
-
-
-int AuthSHA::auth_inc_msg(const unsigned char *key,
-                          unsigned char *msg,
-                          const int msg_len,
-                          unsigned char *auth_par_ptr,
-                          const int      auth_par_len)
-{
-  unsigned char receivedDigest[20];
-
-  if (auth_par_len != 12)
-  {
-    debugprintf(4, "SHA illegal digest length (%d), authentication FAILED.",
-                auth_par_len);
-    return SNMPv3_USM_AUTHENTICATION_FAILURE;
-  }
-
-#ifdef __DEBUG
-  debughexcprintf(21, "digest in Message", auth_par_ptr, 12);
-  debughexcprintf(21, "key", key, 20);
-#endif
-
-  /* Save received digest */
-  memcpy(receivedDigest, auth_par_ptr, 12);
-
-  if (SNMPv3_USM_OK != auth_out_msg(key, msg, msg_len, auth_par_ptr))
-  {
-    /* copy digest back into message and return error */
-    memcpy(auth_par_ptr, receivedDigest, 12);
-    debugprintf(4, "SHA authentication FAILED (1).");
-    return SNMPv3_USM_AUTHENTICATION_FAILURE;
-  }
-
-  /* compare digest to received digest */
-  for (int i=0; i < 12 ; ++i)
-  {
-    if (auth_par_ptr[i] != receivedDigest[i])
-    {
-      /* copy digest back into message and return error */
-      memcpy(auth_par_ptr, receivedDigest, 12);
-      debugprintf(4, "SHA authentication FAILED.");
-      return SNMPv3_USM_AUTHENTICATION_FAILURE;
-    }
-  }
-  debugprintf(4, "SHA authentication OK.");
-  return SNMPv3_USM_OK;
-}
-
 
 /* ----------------------- AuthMD5 ---------------------------------------*/
 
@@ -1757,7 +1610,7 @@ int PrivAES::encrypt(const unsigned char *key,
 
   if (AES_set_encrypt_key(key, key_len * 8, &symcfb) < 0)
   {
-    
+
     debugprintf(1, "AES_set_encrypt_key(%p, %d, %p) failed.",
                 key, key_len * 8, &symcfb);
     return SNMPv3_USM_ERROR;
@@ -1950,7 +1803,7 @@ Priv3DES_EDE::Priv3DES_EDE()
 #endif
 
 
-int 
+int
 Priv3DES_EDE::encrypt(const unsigned char *key,
                       const unsigned int   key_len,
                       const unsigned char *buffer,
@@ -1964,7 +1817,7 @@ Priv3DES_EDE::encrypt(const unsigned char *key,
 {
   unsigned char initVect[8];
   pp_uint64     my_salt = (*salt)++;
-  
+
 #ifdef INVALID_ENCRYPTION
   debugprintf(-10, "\nWARNING: Encrypting with zeroed salt!\n");
   my_salt = 0;
@@ -2055,7 +1908,7 @@ Priv3DES_EDE::encrypt(const unsigned char *key,
   }
 
   if (buffer_len >= 8)
-    for(unsigned int k = 0; k <= (buffer_len - 8); k += 8) 
+    for(unsigned int k = 0; k <= (buffer_len - 8); k += 8)
     {
       DES_EDE3_CBC_ENCRYPT(buffer+k, out_buffer+k, 8,
                            ks1, ks2, ks3, initVect);
@@ -2072,7 +1925,7 @@ Priv3DES_EDE::encrypt(const unsigned char *key,
         *tmp_buf_ptr++ = buffer[l];
       DES_EDE3_CBC_ENCRYPT(tmp_buf, out_buffer + start, 8,
                            ks1, ks2, ks3, initVect);
-      
+
       *out_buffer_len = buffer_len + 8 - (buffer_len % 8);
     }
   else
@@ -2093,7 +1946,7 @@ Priv3DES_EDE::encrypt(const unsigned char *key,
 }
 
 
-int 
+int
 Priv3DES_EDE::decrypt(const unsigned char *key,
                       const unsigned int   key_len,
                       const unsigned char *buffer,
@@ -2151,7 +2004,7 @@ Priv3DES_EDE::decrypt(const unsigned char *key,
       return SNMPv3_USM_ERROR;
     }
 
-  for(unsigned int k=0; k<buffer_len; k+=8 ) 
+  for(unsigned int k=0; k<buffer_len; k+=8 )
     {
       DES_EDE3_CBC_DECRYPT(buffer+k, out_buffer+k, 8,
                            ks1, ks2, ks3, initVect);
@@ -2168,11 +2021,11 @@ Priv3DES_EDE::decrypt(const unsigned char *key,
   debughexcprintf(21, "3DES decrypted Data", out_buffer, *out_buffer_len);
 #endif
 
-  return SNMPv3_USM_OK;  
+  return SNMPv3_USM_OK;
 }
 
 
-int 
+int
 Priv3DES_EDE::extend_short_key(const unsigned char *password,
                                const unsigned int   password_len,
                                const unsigned char *engine_id,
@@ -2258,7 +2111,7 @@ bool Priv3DES_EDE::test()
                           key, key_len, msg, 53,
                           enc_buffer, &enc_buffer_len,
                           priv_params, &priv_params_len, 0x5abc, 0x6def);
-  
+
   debughexcprintf(1, "encrypted text",
                   enc_buffer, enc_buffer_len);
 
@@ -2278,8 +2131,365 @@ bool Priv3DES_EDE::test()
 #endif // _USE_3DES_EDE
 
 
+#if defined(_USE_OPENSSL)
+
+/* ----------------------- AuthSHABase ----------------------------------*/
+
+int AuthSHABase::password_to_key(const unsigned char *password,
+                                  const unsigned int   password_len,
+                                  const unsigned char *engine_id,
+                                  const unsigned int   engine_id_len,
+                                  unsigned char *key,
+                                  unsigned int *key_len)
+{
+#ifdef __DEBUG
+  debugprintf(5,"password_to_key SHA: password: (%s).",
+              OctetStr(password, password_len).get_printable());
+  debugprintf(5,"password_to_key SHA: engine_id: (%s).",
+              OctetStr(engine_id, engine_id_len).get_printable());
+#endif
+
+  unsigned char *cp, password_buf[72];
+  unsigned long  password_index = 0;
+  unsigned long  count = 0, i;
+
+  std::auto_ptr<Hasher> h(get_hasher());
+  h->init(); /* initialize SHA */
+
+  *key_len = h->get_key_length();
+
+  /**********************************************/
+  /* Use while loop until we've done 1 Megabyte */
+  /**********************************************/
+  while (count < 1048576) {
+    cp = password_buf;
+    for (i = 0; i < 64; i++) {
+      /*************************************************/
+      /* Take the next octet of the password, wrapping */
+      /* to the beginning of the password as necessary.*/
+      /*************************************************/
+      *cp++ = password[password_index++ % password_len];
+    }
+
+    h->update(password_buf, 64);
+    count += 64;
+  }
+
+  h->final(key);          /* tell SHA we're done */
+
+#ifdef __DEBUG
+  debughexcprintf(21, "key", key, *key_len);
+#endif
+
+  /*****************************************************/
+  /* Now localize the key with the engine_id and pass  */
+  /* through SHA to produce final key                  */
+  /*****************************************************/
+  h->init();
+  h->update(key,      *key_len);
+  h->update(engine_id, engine_id_len);
+  h->update(key,      *key_len);
+  h->final(key);
+
+#ifdef __DEBUG
+  debughexcprintf(21, "localized key", key, *key_len);
+#endif
+
+  return SNMPv3_USM_OK;
+}
+
+int AuthSHABase::hash(const unsigned char *data,
+                  const unsigned int   data_len,
+                  unsigned char       *digest) const
+{
+  std::auto_ptr<Hasher> h(get_hasher());
+
+  h->init();
+  h->update(data, data_len);
+  h->final(digest);
+
+  return SNMPv3_USM_OK;
+}
+
+int AuthSHABase::auth_out_msg(const unsigned char *key,
+                               unsigned char *msg,
+                               const int msg_len,
+                               unsigned char *auth_par_ptr)
+{
+  std::auto_ptr<Hasher> h(get_hasher());
+  int           key_len = h->get_key_length();
+  unsigned char digest[SNMPv3_AP_MAXLENGTH_AUTHPARAM];
+  unsigned char k_ipad[65];   /* inner padding - key XORd with ipad */
+  unsigned char k_opad[65];   /* outer padding - key XORd with opad */
+
+  memset((char*)(auth_par_ptr), 0, get_auth_params_len());
+
+#ifdef __DEBUG
+  debughexcprintf(21, "key", key, h->get_key_length());
+#endif
+
+  /*
+   * the HMAC_SHA transform looks like:
+   *
+   * SHA(K XOR opad, SHA(K XOR ipad, msg))
+   *
+   * where K is an n byte key
+   * ipad is the byte 0x36 repeated 64 times
+   * opad is the byte 0x5c repeated 64 times
+   * and text is the data being protected
+   */
+
+  /* start out by storing ipads and opads in pads */
+  memset( (char*)k_ipad, 0x36, sizeof k_ipad);
+  memset( (char*)k_opad, 0x5c, sizeof k_opad);
+
+  /* XOR pads with key */
+  for (int i=0; i < key_len; ++i) {
+    k_ipad[i] ^= key[i];
+    k_opad[i] ^= key[i];
+  }
+
+  /* perform inner SHA */
+  h->init();               /* init sha_hash_state for 1st pass */
+  h->update(k_ipad, 64);   /* start with inner pad      */
+  h->update(msg, msg_len); /* then text of datagram     */
+  h->final(digest);        /* finish up 1st pass        */
+  /* perform outer SHA */
+  h->init();               /* init sha_hash_state for 2nd pass */
+  h->update(k_opad, 64);   /* start with outer pad      */
+  h->update(digest, get_hash_len());   /* then results of 1st hash  */
+  h->final(digest);        /* finish up 2nd pass        */
+
+#ifdef __DEBUG
+  debughexcprintf(21,"digest", digest,  get_hash_len());
+#endif
+
+  memcpy(auth_par_ptr, digest, get_auth_params_len());
+
+  return SNMPv3_USM_OK;
+}
+
+
+int AuthSHABase::auth_inc_msg(const unsigned char *key,
+                               unsigned char *msg,
+                               const int msg_len,
+                               unsigned char *auth_par_ptr,
+                               const int      auth_par_len)
+{
+  unsigned char receivedDigest[SNMPv3_AP_MAXLENGTH_AUTHPARAM];
+
+  if (auth_par_len != get_auth_params_len())
+  {
+    debugprintf(4, "SHA illegal digest length (%d), expected (%d), authentication FAILED.",
+                auth_par_len, get_auth_params_len());
+    return SNMPv3_USM_AUTHENTICATION_FAILURE;
+  }
+
+#ifdef __DEBUG
+  std::auto_ptr<Hasher> h(get_hasher());
+  debughexcprintf(21, "digest in Message", auth_par_ptr, auth_par_len);
+  debughexcprintf(21, "key", key, h->get_key_length());
+#endif
+
+  /* Save received digest */
+  memcpy(receivedDigest, auth_par_ptr, auth_par_len);
+
+  if (SNMPv3_USM_OK != auth_out_msg(key, msg, msg_len, auth_par_ptr))
+  {
+    /* copy digest back into message and return error */
+    memcpy(auth_par_ptr, receivedDigest, auth_par_len);
+    debugprintf(4, "SHA authentication FAILED (1).");
+    return SNMPv3_USM_AUTHENTICATION_FAILURE;
+  }
+
+  /* compare digest to received digest */
+  for (int i=0; i < auth_par_len ; ++i)
+  {
+    if (auth_par_ptr[i] != receivedDigest[i])
+    {
+      /* copy digest back into message and return error */
+      memcpy(auth_par_ptr, receivedDigest, auth_par_len);
+      debugprintf(4, "SHA authentication FAILED.");
+      return SNMPv3_USM_AUTHENTICATION_FAILURE;
+    }
+  }
+  debugprintf(4, "SHA authentication OK.");
+  return SNMPv3_USM_OK;
+}
+
+
+class AuthSHA::HasherSHA1 : public AuthSHABase::Hasher
+{
+public:
+  HasherSHA1() {}
+  virtual ~HasherSHA1() {}
+
+  int init()
+  {
+    return SHA1_INIT(&sha_hash_state);
+  }
+
+  int update(const unsigned char *data,
+             const unsigned int   data_len)
+  {
+    return SHA1_PROCESS(&sha_hash_state, data, data_len);
+  }
+
+  int final(unsigned char *digest)
+  {
+    return SHA1_DONE(&sha_hash_state, digest);
+  }
+  int get_key_length() const { return 20; }
+
+private:
+  SHAHashStateType sha_hash_state;
+};
+
+AuthSHABase::Hasher *AuthSHA::get_hasher() const
+{
+  return new HasherSHA1();
+}
+
+
+class AuthHMAC128SHA224::Hasher224 : public AuthSHABase::Hasher
+{
+public:
+  Hasher224() {}
+  virtual ~Hasher224() {}
+
+  int init()
+  {
+    return SHA224_Init(&ctx);
+  }
+
+  int update(const unsigned char *data,
+             const unsigned int   data_len)
+  {
+    return SHA224_Update(&ctx, data, data_len);
+  }
+
+  int final(unsigned char *digest)
+  {
+    return SHA224_Final(digest, &ctx);
+  }
+  int get_key_length() const { return 28; }
+
+private:
+  SHA256_CTX ctx;
+};
+
+
+AuthSHABase::Hasher *AuthHMAC128SHA224::get_hasher() const
+{
+  return new Hasher224();
+}
+
+
+class AuthHMAC192SHA256::Hasher256 : public Hasher
+{
+public:
+  Hasher256() {}
+  virtual ~Hasher256() {}
+
+  int init()
+  {
+    return SHA256_Init(&ctx);
+  }
+
+  int update(const unsigned char *data,
+             const unsigned int   data_len)
+  {
+    return SHA256_Update(&ctx, data, data_len);
+  }
+
+  int final(unsigned char *digest)
+  {
+    return SHA256_Final(digest, &ctx);
+  }
+  int get_key_length() const { return 32; }
+private:
+  SHA256_CTX ctx;
+};
+
+
+
+AuthSHABase::Hasher *AuthHMAC192SHA256::get_hasher() const
+{
+  return new Hasher256();
+}
+
+
+class AuthHMAC256SHA384::Hasher384 : public Hasher
+{
+public:
+  Hasher384() {}
+  virtual ~Hasher384() {}
+
+  int init()
+  {
+    return SHA384_Init(&ctx);
+  }
+
+  int update(const unsigned char *data,
+             const unsigned int   data_len)
+  {
+    return SHA384_Update(&ctx, data, data_len);
+  }
+
+  int final(unsigned char *digest)
+  {
+    return SHA384_Final(digest, &ctx);
+  }
+  int get_key_length() const { return 48; }
+private:
+  SHA512_CTX ctx;
+};
+
+
+
+AuthSHABase::Hasher *AuthHMAC256SHA384::get_hasher() const
+{
+  return new Hasher384();
+}
+
+
+
+class AuthHMAC384SHA512::Hasher512 : public Hasher
+{
+public:
+  Hasher512() {}
+  virtual ~Hasher512() {}
+
+  int init()
+  {
+    return SHA512_Init(&ctx);
+  }
+
+  int update(const unsigned char *data,
+             const unsigned int   data_len)
+  {
+    return SHA512_Update(&ctx, data, data_len);
+  }
+
+  int final(unsigned char *digest)
+  {
+    return SHA512_Final(digest, &ctx);
+  }
+  int get_key_length() const { return 64; }
+private:
+  SHA512_CTX ctx;
+};
+
+AuthSHABase::Hasher *AuthHMAC384SHA512::get_hasher() const
+{
+  return new Hasher512();
+}
+
+#endif // defined(_USE_OPENSSL)
+
+
 #ifdef SNMP_PP_NAMESPACE
 } // end of namespace Snmp_pp
-#endif 
+#endif
 
 #endif // _SNMPv3

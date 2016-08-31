@@ -307,6 +307,7 @@ libsnmp___la_SOURCES = address.cpp asn1.cpp auth_priv.cpp counter.cpp \
                         timetick.cpp usm_v3.cpp uxsnmp.cpp v3.cpp vb.cpp
 
 libsnmp___la_LDFLAGS = -version-info @SNMP_PP_MAJOR_VERSION@@SNMP_PP_MINOR_VERSION@:@SNMP_PP_MICRO_VERSION@:0 @LINKFLAGS@
+EXTRA_DIST = Makefile.aix5 Makefile.bcc Makefile.dunix Makefile.gcc_solaris Makefile.hpux11 Makefile.linux Makefile.solaris common.mk
 all: all-am
 
 .SUFFIXES:

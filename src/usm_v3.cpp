@@ -24,7 +24,7 @@
   _##  upon this software code base. 
   _##  
   _##########################################################################*/
-char usm_v3_cpp_version[]="@(#) SNMP++ $Id: usm_v3.cpp 2361 2013-05-09 22:15:06Z katz $";
+char usm_v3_cpp_version[]="@(#) SNMP++ $Id: usm_v3.cpp 2898 2015-07-18 20:09:21Z katz $";
 
 #include <libsnmp.h>
 
@@ -1490,7 +1490,9 @@ int USM::get_security_name(const unsigned char *user_name,
     return SNMPv3_USM_OK;
 
   if (user_name_len != 0)
+  {
     debugprintf(1, "USM::get_security_name: User unknown");
+  }
   return SNMPv3_USM_ERROR;
 }
 
@@ -1516,7 +1518,9 @@ int USM::get_user_name(unsigned char *user_name, long int *user_name_len,
   if (result == SNMPv3_USM_OK)
     return SNMPv3_USM_OK;
   if (security_name_len != 0)
+  {
     debugprintf(1, "usmGetUsmUserName: User unknown");
+  }
   return SNMPv3_USM_ERROR;
 }
 

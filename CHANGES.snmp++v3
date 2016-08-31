@@ -1,3 +1,10 @@
+Changes snmp++v3.3.6
+====================
+
+- Added: SHA-2 (SHA-224,-256,-384,-512) support to USM as defined by RFC 7630
+- Changed: Counter64::get_printable() does no longer produce hex output for
+  values larger than 2^32. (Florian Lohoff)
+
 Changes snmp++v3.3.5
 ====================
 

@@ -49,13 +49,19 @@
 
   DESCRIPTION:         Implementation for Counter64 (64 bit counter class).
 =====================================================================*/
-char counter64_cpp_version[]="@(#) SNMP++ $Id: ctr64.cpp 2361 2013-05-09 22:15:06Z katz $";
+char counter64_cpp_version[]="@(#) SNMP++ $Id: ctr64.cpp 3015 2016-02-22 00:09:30Z fock $";
 
 #include <libsnmp.h>
 
 #include "snmp_pp/ctr64.h"
 #include "snmp_pp/asn1.h"
 #include "snmp_pp/v3.h"
+
+#ifdef HAVE_INTTYPES_H
+#define __STDC_FORMAT_MACROS 1
+#include <inttypes.h>
+#endif
+
 
 #ifdef SNMP_PP_NAMESPACE
 namespace Snmp_pp {
@@ -227,9 +233,6 @@ bool operator>=(const Counter64 &lhs, const Counter64 &rhs)
 #endif
 
 //----------[ return ASCII format ]-------------------------
-// TODO:  Fix up to do real 64bit decimal value printing...
-//        For now, print > 32-bit values in hex
-// 26Nov2002 M.Evstiounin - this method is not thread safe!
 const char *Counter64::get_printable() const
 {
   if (m_changed == false)
@@ -237,7 +240,11 @@ const char *Counter64::get_printable() const
 
   char *buf = PP_CONST_CAST(char*, output_buffer);
   if ( high() != 0 )
+#ifdef HAVE_INTTYPES_H
+    sprintf(buf, "%" PRIu64, (uint64_t) high()<<32|low());
+#else
     sprintf(buf, "0x%lX%08lX", high(), low());
+#endif
   else
     sprintf(buf, "%lu", low());
 
@@ -253,7 +260,7 @@ SnmpSyntax& Counter64::operator=(const SnmpSyntax &val)
 {
   if (this == &val) return *this;  // protect against assignment from itself
 
-  smival.value.hNumber.lopart = 0;	// pessimsitic - assume no mapping
+  smival.value.hNumber.lopart = 0;	// pessimistic - assume no mapping
   smival.value.hNumber.hipart = 0;
 
   // try to make assignment valid

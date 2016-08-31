@@ -28,10 +28,10 @@
 #ifndef _CONFIG_SNMP_PP_H_
 #define _CONFIG_SNMP_PP_H_
 
-#define SNMP_PP_VERSION_STRING "3.3.5"
+#define SNMP_PP_VERSION_STRING "3.3.6"
 #define SNMP_PP_VERSION 3
 #define SNMP_PP_RELEASE 3
-#define SNMP_PP_PATCHLEVEL 5
+#define SNMP_PP_PATCHLEVEL 6
 
 //! The maximum size of a message that can be sent or received.
 #define MAX_SNMP_PACKET 4096

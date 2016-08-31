@@ -33,7 +33,7 @@
 
       Author:         Peter E Mellquist
 =====================================================================*/
-char snmp_cpp_version[]="#(@) SNMP++ $Id: uxsnmp.cpp 2790 2014-11-28 05:54:44Z fock $";
+char snmp_cpp_version[]="#(@) SNMP++ $Id: uxsnmp.cpp 2948 2015-12-29 09:44:06Z katz $";
 
 /* CK Ng    added support for WIN32 in the whole file */
 
@@ -510,10 +510,15 @@ int receive_snmp_notification(SnmpSocket sock, Snmp &snmp_session,
     ((UTarget*)*target)->set_security_name(security_name);
     ((UTarget*)*target)->set_security_model(security_model);
 
-    v3MP::I->add_to_engine_id_table(engine_id,
-                         (char*)(fromaddress.IpAddress::get_printable()),
-                         fromaddress.get_port());
-
+    // We should receive traps and informs only, but to be sure that 
+    // discovery is also working here, we add the engine IDs to the cache
+    // though.
+    if (pdu.get_type() == sNMP_PDU_REPORT ||
+        pdu.get_type() == sNMP_PDU_RESPONSE) {
+        v3MP::I->add_to_engine_id_table(engine_id,
+                             (char*)(fromaddress.IpAddress::get_printable()),
+                             fromaddress.get_port());
+    }
     debugprintf(4,"receive_snmp_notification: engine_id (%s), security_name "
 		"(%s), security_model (%i), security_level (%i)",
                 engine_id.get_printable(), security_name.get_printable(),
@@ -669,7 +674,6 @@ void Snmp::init(int& status, IpAddress *addresses[2],
 #ifdef _THREADS
 #ifdef WIN32
   m_hThread = INVALID_HANDLE_VALUE;
-  m_hThreadEndEvent = ::CreateEvent(NULL, true, false, NULL);
 #endif
 #endif
 
@@ -905,12 +909,6 @@ Snmp::~Snmp()
 {
   stop_poll_thread();
 
-#ifdef _THREADS
-#ifdef WIN32
-  ::CloseHandle(m_hThreadEndEvent);
-#endif
-#endif
-
   // if we failed during construction then don't try
   // to free stuff up that was not allocated
   if (iv_snmp_session != INVALID_SOCKET)
@@ -921,8 +919,6 @@ Snmp::~Snmp()
 
     close(iv_snmp_session);    // close the dynamic socket
   }
-  // if we failed during construction then don't try
-  // to free stuff up that was not allocated
 
 #ifdef SNMP_PP_IPv6
   if (iv_snmp_session_ipv6 != INVALID_SOCKET)
@@ -2245,6 +2241,7 @@ bool Snmp::start_poll_thread(const int timeout)
     {
         debugprintf(0, "Could not create ProcessThread");
 	m_bThreadRunning = false;
+	m_hThread = INVALID_HANDLE_VALUE;
     }
 #elif defined (CPU) && CPU == PPC603
 	m_hThread = taskSpawn("Snmp::process_thread",  0, 0, 10000, (int (*)(...))Snmp::process_thread,  (int)this, 0, 0, 0, 0, 0, 0, 0, 0, 0);
@@ -2278,19 +2275,22 @@ void Snmp::stop_poll_thread()
     if (m_bThreadRunning == false) return;
 
 #ifdef _THREADS
-    // stop the thread
+    // tell the thread to stop
     m_bThreadRunning = false;
 
     // Wait for the working thread to stop....
 #ifdef WIN32
-    ::WaitForSingleObject(m_hThreadEndEvent, INFINITE);
-    CloseHandle(m_hThread);
+    if (m_hThread != INVALID_HANDLE_VALUE)
+    {
+        ::WaitForSingleObject(m_hThread, INFINITE);
+        CloseHandle(m_hThread);
+        m_hThread = INVALID_HANDLE_VALUE;
+    }
 #elif defined (CPU) && CPU == PPC603
     while (taskIdVerify(m_hThread) == OK)
 	taskDelay(10);
 #else
-    //int *status; // not used
-    pthread_join(m_hThread, NULL /*(void**) &status */); 
+    pthread_join(m_hThread, NULL);
 #endif
 #endif
 }
@@ -2298,9 +2298,6 @@ void Snmp::stop_poll_thread()
 #ifdef WIN32
 int Snmp::process_thread(Snmp *pSnmp)
 {
-#ifdef _THREADS
-  ::ResetEvent(pSnmp->m_hThreadEndEvent);
-#endif
 #else
 void* Snmp::process_thread(void *arg)
 {
@@ -2316,7 +2313,6 @@ void* Snmp::process_thread(void *arg)
 
 #ifdef _THREADS
 #ifdef WIN32
-    ::SetEvent(pSnmp->m_hThreadEndEvent);
 #else
 #if defined (CPU) && CPU == PPC603
 	exit(0);

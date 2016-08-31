@@ -24,7 +24,7 @@
   _##  upon this software code base. 
   _##  
   _##########################################################################*/
-char mp_v3_cpp_version[]="@(#) SNMP++ $Id: mp_v3.cpp 2361 2013-05-09 22:15:06Z katz $";
+char mp_v3_cpp_version[]="@(#) SNMP++ $Id: mp_v3.cpp 2938 2015-12-18 20:40:33Z katz $";
 
 #include <libsnmp.h>
 
@@ -69,6 +69,7 @@ v3MP *v3MP::I = 0;
 
 // Construct engine id table
 v3MP::EngineIdTable::EngineIdTable(int initial_size)
+ : upper_limit_entries(MAX_ENGINE_ID_CACHE_SIZE)
 {
   if (initial_size < 1)
     initial_size = 10;
@@ -96,6 +97,17 @@ int v3MP::EngineIdTable::add_entry(const OctetStr &engine_id,
   if (!table)
     return SNMPv3_MP_NOT_INITIALIZED;
 
+  if (entries >= upper_limit_entries) {
+    LOG_BEGIN(loggerModuleName, WARNING_LOG | 0);
+    LOG("v3MP::EngineIdTable: rejected new entry because upper limit reached (id) (host) (port) (limit)");
+    LOG(engine_id.get_printable());
+    LOG(host.get_printable());
+    LOG(port);
+    LOG(upper_limit_entries);
+    LOG_END;
+    return SNMPv3_MP_ERROR;  
+  }
+  
   LOG_BEGIN(loggerModuleName, INFO_LOG | 9);
   LOG("v3MP::EngineIdTable: adding new entry (id) (host) (port)");
   LOG(engine_id.get_printable());
@@ -349,6 +361,14 @@ v3MP::Cache::~Cache()
 {
   if (table)
   {
+    if (entries > 0)
+    {
+      LOG_BEGIN(loggerModuleName, WARNING_LOG | 3);
+      LOG("v3MP::Cache: Cache not empty in destructor (entries)");
+      LOG(entries);
+      LOG_END;
+    }
+
     for (int i = 0; i < entries; i++)
       usm->delete_sec_state_reference(table[i].sec_state_ref);
     entries = 0;

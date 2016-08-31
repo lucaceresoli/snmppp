@@ -24,7 +24,7 @@
   _##  upon this software code base. 
   _##  
   _##########################################################################*/
-// $Id: uxsnmp.h 2359 2013-05-09 20:07:01Z fock $
+// $Id: uxsnmp.h 2876 2015-05-30 13:23:37Z fock $
 
 #ifndef _UXSNMP_H_
 #define _UXSNMP_H_
@@ -654,7 +654,6 @@ private:
 #ifdef _THREADS
 #ifdef WIN32
   HANDLE m_hThread;
-  HANDLE m_hThreadEndEvent;
 #elif defined (CPU) && CPU == PPC603
   int m_hThread;
 #else

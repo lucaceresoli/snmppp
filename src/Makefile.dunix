@@ -1,6 +1,6 @@
   ############################################################################
   ## 
-  ##  Makefile.am  
+  ##  Makefile.dunix  
   ##
   ##  SNMP++ v3.3
   ##  -----------------------------------------------
@@ -25,14 +25,22 @@
   ##  
   ##########################################################################*
 
-AM_CPPFLAGS = -I$(abs_top_srcdir) -I$(abs_top_srcdir)/include $(PTHREAD_CFLAGS) @CLIBFLAGS@
-SUBDIRS = include src consoleExamples
-ACLOCAL_AMFLAGS = -I m4
+#
+#  Flags: compiler options, search paths
+#
 
-EXTRA_DIST = snmp++-3.pc.in libsnmp.h CHANGES.snmp++v3 readme.txt README.v3 README.autoconf doc_config 
+COPTIONS =  -g -pt -pthread -D_XPG4_EXTENDED -D__unix -Wall # -D_DEBUG
+CFLAGS	 = $(COPTIONS) $(CINCDIRS) $(USEROPTS)
+LDFLAGS  = $(CFLAGS)
 
-pkgconfigdir = $(libdir)/pkgconfig
-pkgconfig_DATA = snmp++-3.pc
+SHARED   = -KPIC -shared
+SYSLIBS	 = 
 
-library_includedir = $(includedir)
-library_include_HEADERS= libsnmp.h
+# Compilation rules
+#
+CC = cxx
+LD = cxx
+
+include common.mk
+
+

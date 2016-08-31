@@ -1,30 +1,30 @@
 /*_############################################################################
-  _## 
-  _##  auth_priv.h  
+  _##
+  _##  auth_priv.h
   _##
   _##  SNMP++ v3.3
   _##  -----------------------------------------------
   _##  Copyright (c) 2001-2013 Jochen Katz, Frank Fock
   _##
   _##  This software is based on SNMP++2.6 from Hewlett Packard:
-  _##  
+  _##
   _##    Copyright (c) 1996
   _##    Hewlett-Packard Company
-  _##  
+  _##
   _##  ATTENTION: USE OF THIS SOFTWARE IS SUBJECT TO THE FOLLOWING TERMS.
-  _##  Permission to use, copy, modify, distribute and/or sell this software 
-  _##  and/or its documentation is hereby granted without fee. User agrees 
-  _##  to display the above copyright notice and this license notice in all 
-  _##  copies of the software and any documentation of the software. User 
-  _##  agrees to assume all liability for the use of the software; 
-  _##  Hewlett-Packard and Jochen Katz make no representations about the 
-  _##  suitability of this software for any purpose. It is provided 
-  _##  "AS-IS" without warranty of any kind, either express or implied. User 
+  _##  Permission to use, copy, modify, distribute and/or sell this software
+  _##  and/or its documentation is hereby granted without fee. User agrees
+  _##  to display the above copyright notice and this license notice in all
+  _##  copies of the software and any documentation of the software. User
+  _##  agrees to assume all liability for the use of the software;
+  _##  Hewlett-Packard and Jochen Katz make no representations about the
+  _##  suitability of this software for any purpose. It is provided
+  _##  "AS-IS" without warranty of any kind, either express or implied. User
   _##  hereby grants a royalty-free license to any and all derivatives based
-  _##  upon this software code base. 
-  _##  
+  _##  upon this software code base.
+  _##
   _##########################################################################*/
-// $Id: auth_priv.h 2833 2015-03-15 10:33:08Z katz $
+// $Id: auth_priv.h 2999 2016-02-04 20:46:55Z katz $
 
 #ifndef _AUTH_PRIV_
 #define _AUTH_PRIV_
@@ -39,7 +39,7 @@
 namespace Snmp_pp {
 #endif
 
-#define SNMPv3_USM_MAX_KEY_LEN        32
+#define SNMPv3_USM_MAX_KEY_LEN        64
 
 /* Accept Messages with auth/priv param fields up to this length */
 #define SNMPv3_AP_MAXLENGTH_AUTHPARAM      128
@@ -48,6 +48,12 @@ namespace Snmp_pp {
 
 #define SNMPv3_AP_OUTPUT_LENGTH_MD5   16
 #define SNMPv3_AP_OUTPUT_LENGTH_SHA   20
+
+#define SNMPv3_AP_OUTPUT_LENGTH_SHA224 28
+#define SNMPv3_AP_OUTPUT_LENGTH_SHA256 32
+#define SNMPv3_AP_OUTPUT_LENGTH_SHA384 48
+#define SNMPv3_AP_OUTPUT_LENGTH_SHA512 64
+
 
 class OctetStr;
 
@@ -255,8 +261,8 @@ public:
                       unsigned int        *out_buffer_len,
                       const unsigned char *privacy_params,
                       const unsigned int   privacy_params_len,
-		      const unsigned long  engine_boots,
-		      const unsigned long  engine_time) = 0;
+              const unsigned long  engine_boots,
+              const unsigned long  engine_time) = 0;
 
   /**
    * Extend a localized key that is too short.
@@ -492,8 +498,8 @@ public:
                   unsigned int        *out_buffer_len,
                   const unsigned char *privacy_params,
                   const unsigned int   privacy_params_len,
-		  const unsigned long  engine_boots,
-		  const unsigned long  engine_time);
+          const unsigned long  engine_boots,
+          const unsigned long  engine_time);
 
   /**
    * Get the length of the authentication parameters field of the given
@@ -535,46 +541,6 @@ private:
   pp_uint64 salt;  ///< current salt value (64 bits)
 };
 
-
-/**
- * Authentication module using SHA.
- *
- * @see Auth
- */
-class DLLOPT AuthSHA: public Auth
-{
-public:
-  int password_to_key(const unsigned char *password,
-		      const unsigned int   password_len,
-		      const unsigned char *engine_id,
-		      const unsigned int   engine_id_len,
-		      unsigned char       *key,
-		      unsigned int        *key_len);
-
-  int hash(const unsigned char *data,
-	   const unsigned int   data_len,
-	   unsigned char       *digest) const;
-
-  int auth_out_msg(const unsigned char *key,
-		   unsigned char       *msg,
-		   const int            msg_len,
-		   unsigned char       *auth_par_ptr);
-
-  int auth_inc_msg(const unsigned char *key,
-		   unsigned char       *msg,
-		   const int            msg_len,
-		   unsigned char       *auth_par_ptr,
-                   const int            auth_par_len);
-
-  int get_id() const { return SNMP_AUTHPROTOCOL_HMACSHA; };
-
-  const char *get_id_string() const { return "HMAC-SHA"; };
-
-  int get_auth_params_len() const { return 12; };
-
-  int get_hash_len() const { return SNMPv3_AP_OUTPUT_LENGTH_SHA;};
-};
-
 /**
  * Authentication module using MD5.
  *
@@ -584,27 +550,27 @@ class DLLOPT AuthMD5: public Auth
 {
 public:
   int password_to_key(const unsigned char *password,
-		      const unsigned int   password_len,
-		      const unsigned char *engine_id,
-		      const unsigned int   engine_id_len,
-		      unsigned char       *key,
-		      unsigned int        *key_len);
+              const unsigned int   password_len,
+              const unsigned char *engine_id,
+              const unsigned int   engine_id_len,
+              unsigned char       *key,
+              unsigned int        *key_len);
 
   int hash(const unsigned char *data,
-	   const unsigned int   data_len,
-	   unsigned char       *digest) const;
+       const unsigned int   data_len,
+       unsigned char       *digest) const;
 
   int auth_out_msg(const unsigned char *key,
-		   unsigned char       *msg,
-		   const int            msg_len,
-		   unsigned char       *auth_par_ptr);
+           unsigned char       *msg,
+           const int            msg_len,
+           unsigned char       *auth_par_ptr);
 
 
   int auth_inc_msg(const unsigned char *key,
-		   unsigned char       *msg,
-		   const int            msg_len,
-		   unsigned char       *auth_par_ptr,
-                   const int            auth_par_len);
+           unsigned char       *msg,
+           const int            msg_len,
+           unsigned char       *auth_par_ptr,
+           const int            auth_par_len);
 
   int get_id() const { return SNMP_AUTHPROTOCOL_HMACMD5; };
 
@@ -648,8 +614,8 @@ class DLLOPT PrivDES: public Priv
               unsigned int        *out_buffer_len,
               const unsigned char *privacy_params,
               const unsigned int   privacy_params_len,
-	      const unsigned long  engine_boots,
-	      const unsigned long  engine_time);
+          const unsigned long  engine_boots,
+          const unsigned long  engine_time);
 
   int extend_short_key(const unsigned char *password,
                        const unsigned int   password_len,
@@ -708,8 +674,8 @@ public:
               unsigned int        *out_buffer_len,
               const unsigned char *privacy_params,
               const unsigned int   privacy_params_len,
-	      const unsigned long  engine_boots,
-	      const unsigned long  engine_time);
+          const unsigned long  engine_boots,
+          const unsigned long  engine_time);
 
   int extend_short_key(const unsigned char *password,
                        const unsigned int   password_len,
@@ -764,8 +730,8 @@ public:
               unsigned int        *out_buffer_len,
               const unsigned char *privacy_params,
               const unsigned int   privacy_params_len,
-	      const unsigned long  engine_boots,
-	      const unsigned long  engine_time);
+          const unsigned long  engine_boots,
+          const unsigned long  engine_time);
 
   int extend_short_key(const unsigned char *password,
                        const unsigned int   password_len,
@@ -829,7 +795,7 @@ private:
 #ifdef _USE_3DES_EDE
 /**
  * Encryption module using TripleDES-EDE KEY
- * 
+ *
  *
  * @see Priv
  */
@@ -865,8 +831,8 @@ public:
               unsigned int        *out_buffer_len,
               const unsigned char *privacy_params,
               const unsigned int   privacy_params_len,
-	      const unsigned long  engine_boots,
-	      const unsigned long  engine_time);
+          const unsigned long  engine_boots,
+          const unsigned long  engine_time);
 
   int extend_short_key(const unsigned char *password,
                        const unsigned int   password_len,
@@ -891,9 +857,181 @@ public:
 
 #endif // _USE_3DES_EDE
 
+#if defined(_USE_OPENSSL)
+
+/**
+ * Base class for SHA authentication modules.
+ * Provides support for usmHMACSHAAuthProtocol, usmHMAC128SHA224AuthProtocol,
+ * usmHMAC192SHA256AuthProtocol, usmHMAC256SHA384AuthProtocol and
+ * usmHMAC384SHA512AuthProtocol.
+ *
+ * @see Auth
+ */
+class DLLOPT AuthSHABase: public Auth
+{
+public:
+  int password_to_key(const unsigned char *password,
+      const unsigned int   password_len,
+      const unsigned char *engine_id,
+      const unsigned int   engine_id_len,
+      unsigned char       *key,
+      unsigned int        *key_len);
+
+  int hash(const unsigned char *data,
+      const unsigned int   data_len,
+      unsigned char       *digest) const;
+
+  int auth_out_msg(const unsigned char *key,
+      unsigned char       *msg,
+      const int            msg_len,
+      unsigned char       *auth_par_ptr);
+
+  int auth_inc_msg(const unsigned char *key,
+      unsigned char       *msg,
+      const int            msg_len,
+      unsigned char       *auth_par_ptr,
+      const int            auth_par_len);
+
+protected:
+  class Hasher
+  {
+  public:
+    Hasher() {}
+    virtual ~Hasher() {}
+
+    virtual int init() = 0;
+    virtual int update(const unsigned char *data,
+                       const unsigned int   data_len) = 0;
+    virtual int final(unsigned char *digest) = 0;
+
+    virtual int get_key_length() const = 0;
+  };
+
+  virtual Hasher *get_hasher() const = 0;
+};
+
+
+/**
+ * Authentication module using SHA1 (usmHMACSHAAuthProtocol).
+ *
+ * @see Auth
+ */
+class DLLOPT AuthSHA : public AuthSHABase
+{
+private:
+
+public:
+  int get_id() const { return SNMP_AUTHPROTOCOL_HMACSHA; };
+
+  const char *get_id_string() const { return "HMAC-SHA"; };
+
+  int get_auth_params_len() const { return 12; };
+
+  int get_hash_len() const { return SNMPv3_AP_OUTPUT_LENGTH_SHA; };
+
+
+protected:
+  class HasherSHA1;
+
+  Hasher *get_hasher() const;
+};
+
+
+/**
+ * Authentication module using SHA2 (usmHMAC128SHA224AuthProtocol).
+ *
+ * @see Auth
+ */
+class DLLOPT AuthHMAC128SHA224 : public AuthSHABase
+{
+private:
+
+public:
+  int get_id() const { return SNMP_AUTHPROTOCOL_HMAC128SHA224; };
+
+  const char *get_id_string() const { return "HMAC-128-SHA-224"; };
+
+  int get_auth_params_len() const { return 16; };
+
+  int get_hash_len() const { return SNMPv3_AP_OUTPUT_LENGTH_SHA224; };
+
+
+protected:
+  class Hasher224;
+
+  Hasher *get_hasher() const;
+};
+
+/**
+ * Authentication module using SHA2 (usmHMAC192SHA256AuthProtocol).
+ *
+ * @see Auth
+ */
+class DLLOPT AuthHMAC192SHA256 : public AuthSHABase
+{
+public:
+  int get_id() const { return SNMP_AUTHPROTOCOL_HMAC192SHA256; };
+
+  const char *get_id_string() const { return "HMAC-192-SHA-256"; };
+
+  int get_auth_params_len() const { return 24; };
+
+  int get_hash_len() const { return SNMPv3_AP_OUTPUT_LENGTH_SHA256;};
+
+protected:
+  class Hasher256;
+
+  Hasher *get_hasher() const;
+};
+
+/**
+ * Authentication module using SHA2 (usmHMAC256SHA384AuthProtocol).
+ *
+ * @see Auth
+ */
+class DLLOPT AuthHMAC256SHA384 : public AuthSHABase
+{
+public:
+  int get_id() const { return SNMP_AUTHPROTOCOL_HMAC256SHA384; };
+
+  const char *get_id_string() const { return "HMAC-256-SHA-384"; };
+
+  int get_auth_params_len() const { return 32; };
+
+  int get_hash_len() const { return SNMPv3_AP_OUTPUT_LENGTH_SHA384;};
+
+protected:
+  class Hasher384;
+
+  Hasher *get_hasher() const;
+};
+
+/**
+ * Authentication module using SHA2 (usmHMAC384SHA512AuthProtocol).
+ *
+ * @see Auth
+ */
+class DLLOPT AuthHMAC384SHA512 : public AuthSHABase
+{
+public:
+  int get_id() const { return SNMP_AUTHPROTOCOL_HMAC384SHA512; };
+
+  const char *get_id_string() const { return "HMAC-384-SHA-512"; };
+
+  int get_auth_params_len() const { return 48; };
+
+  int get_hash_len() const { return SNMPv3_AP_OUTPUT_LENGTH_SHA512;};
+
+protected:
+  class Hasher512;
+  Hasher *get_hasher() const;
+};
+
+#endif // defined(_USE_OPENSSL)
+
 #ifdef SNMP_PP_NAMESPACE
 } // end of namespace Snmp_pp
-#endif 
+#endif
 
 #endif // _SNMPv3
 

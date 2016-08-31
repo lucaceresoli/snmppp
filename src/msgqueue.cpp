@@ -47,7 +47,7 @@
       Author:           Peter E Mellquist
 
 =====================================================================*/
-char msgqueue_version[]="#(@) SNMP++ $Id: msgqueue.cpp 2503 2013-12-18 21:04:36Z katz $";
+char msgqueue_version[]="#(@) SNMP++ $Id: msgqueue.cpp 2903 2015-07-31 16:29:33Z fock $";
 
 #include <libsnmp.h>
 
@@ -746,17 +746,20 @@ int CSNMPMessageQueue::HandleEvents(const int maxfds,
         if ((target->get_type() == SnmpTarget::type_utarget) &&
             (target->get_version() == version3))
         {
-          UdpAddress addr = target->get_address();
+          if (tmppdu.get_type() == sNMP_PDU_REPORT || 
+              tmppdu.get_type() == sNMP_PDU_RESPONSE) {
+              
+            UdpAddress addr = target->get_address();
 
-		   LOG_BEGIN(loggerModuleName, DEBUG_LOG | 14);
-          LOG("MsgQueue: Adding engine id to table (addr) (id)");
-          LOG(addr.get_printable());
-          LOG(engine_id.get_printable());
-          LOG_END;
-
-          v3MP::I->add_to_engine_id_table(engine_id,
-                                          (char*)addr.IpAddress::get_printable(),
+            LOG_BEGIN(loggerModuleName, DEBUG_LOG | 14);
+            LOG("MsgQueue: Adding engine id to table (addr) (id)");
+            LOG(addr.get_printable());
+            LOG(engine_id.get_printable());
+            LOG_END;
+            v3MP::I->add_to_engine_id_table(engine_id,
+                                         (char*)addr.IpAddress::get_printable(),
                                           addr.get_port());
+          }
         }
       }
 #endif

@@ -1,28 +1,28 @@
 /*_############################################################################
-  _## 
-  _##  log.cpp  
+  _##
+  _##  log.cpp
   _##
   _##  SNMP++ v3.3
   _##  -----------------------------------------------
   _##  Copyright (c) 2001-2013 Jochen Katz, Frank Fock
   _##
   _##  This software is based on SNMP++2.6 from Hewlett Packard:
-  _##  
+  _##
   _##    Copyright (c) 1996
   _##    Hewlett-Packard Company
-  _##  
+  _##
   _##  ATTENTION: USE OF THIS SOFTWARE IS SUBJECT TO THE FOLLOWING TERMS.
-  _##  Permission to use, copy, modify, distribute and/or sell this software 
-  _##  and/or its documentation is hereby granted without fee. User agrees 
-  _##  to display the above copyright notice and this license notice in all 
-  _##  copies of the software and any documentation of the software. User 
-  _##  agrees to assume all liability for the use of the software; 
-  _##  Hewlett-Packard and Jochen Katz make no representations about the 
-  _##  suitability of this software for any purpose. It is provided 
-  _##  "AS-IS" without warranty of any kind, either express or implied. User 
+  _##  Permission to use, copy, modify, distribute and/or sell this software
+  _##  and/or its documentation is hereby granted without fee. User agrees
+  _##  to display the above copyright notice and this license notice in all
+  _##  copies of the software and any documentation of the software. User
+  _##  agrees to assume all liability for the use of the software;
+  _##  Hewlett-Packard and Jochen Katz make no representations about the
+  _##  suitability of this software for any purpose. It is provided
+  _##  "AS-IS" without warranty of any kind, either express or implied. User
   _##  hereby grants a royalty-free license to any and all derivatives based
-  _##  upon this software code base. 
-  _##  
+  _##  upon this software code base.
+  _##
   _##########################################################################*/
 
 #include <libsnmp.h>
@@ -93,8 +93,8 @@ initLogProfiles()
 
  /**
   * Initialize a log entry, showing timestamp, class, and level.
-  * 
-  */  
+  *
+  */
 void LogEntry::init(void)
 {
 	add_timestamp();
@@ -107,16 +107,16 @@ void LogEntry::init(void)
         pthread_t pid = pthread_self();
         unsigned char *ptc = (unsigned char*)(void*)(&pid);
         OctetStr os;
-        os.set_data(ptc, sizeof(ptc));
+        os.set_data(ptc, sizeof(pthread_t));
         add_string(os.get_printable_hex());
-#else 
-#ifdef HAVE_GETPID        
+#else
+#ifdef HAVE_GETPID
 	pid_t pid = getpid();
 #else
         int pid = 0;
-#endif 
+#endif
 	add_integer(pid);
-#endif        
+#endif
 #endif
 
 	add_string(": ");
@@ -136,7 +136,7 @@ void LogEntry::init(void)
 
 #ifdef LOG_INDENT
 	// indent log by level
-	for (int i=0; i<(type & LOG_LEVEL_MASK); i++) 
+	for (int i=0; i<(type & LOG_LEVEL_MASK); i++)
 		add_string(" ");
 #endif
 }
@@ -151,12 +151,12 @@ LogEntry& LogEntry::operator+=(const char* s)
 	// The convention for Agent++ log messages is that the
 	// timestamp, etc. is followed by the class and method name,
 	// then by the list of arguments.
-	if (count == 0) 
+	if (count == 0)
 		add_string(s);
 	else {
-	  if (count == 1) 
+	  if (count == 1)
 		add_string(": ");
-	  else 
+	  else
 		add_string(", ");
 
 	  add_string("(");
@@ -174,9 +174,9 @@ LogEntry& LogEntry::operator+=(const char* s)
  */
 LogEntry& LogEntry::operator+=(const long l)
 {
-	if (count == 1) 
+	if (count == 1)
 		add_string(": ");
-	else 
+	else
 		add_string(", ");
 
 	count++;
@@ -236,7 +236,7 @@ bool LogEntryImpl::add_string(const char* s)
 	}
 	output_stopped = true;
 	return false;
-}	
+}
 
 
 /*-------------------------- class AgentLog ---------------------------*/
@@ -276,17 +276,17 @@ AgentLog::set_profile(const char * const logprofile)
 #endif
 
 void AgentLog::set_filter(int logclass, unsigned char filter)
-{ 
+{
 	int idx = (logclass/16)-1;
 	if ((idx >=0) && (idx < LOG_TYPES) && ((filter<16)||(filter==0xFF)))
-		logfilter[idx] = filter; 
+		logfilter[idx] = filter;
 }
 
 unsigned char AgentLog::get_filter(int logclass) const
 {
-	int idx = (logclass/16)-1;	
-	if ((idx >= 0) && (idx < LOG_TYPES)) { 
-		return logfilter[idx]; 
+	int idx = (logclass/16)-1;
+	if ((idx >= 0) && (idx < LOG_TYPES)) {
+		return logfilter[idx];
 	}
 	return 0;
 }
@@ -303,14 +303,14 @@ const char* AgentLog::now(char* buf)
 	else
 		buf[0] = 0;
 	return buf;
-}	
+}
 
-/*static*/ const char* AgentLog::get_current_time() 
+/*static*/ const char* AgentLog::get_current_time()
 {
 	char* buf = new char[18];
         strcpy(buf, DefaultLog::log()->now());
 	return buf;
-}	
+}
 
 
 /*------------------------ class AgentLogImpl -------------------------*/
@@ -328,7 +328,7 @@ AgentLogImpl::AgentLogImpl(FILE* fp) : AgentLog()
  * to the given file.
  *
  * @param fname - The file name of a log file.
- */ 
+ */
 AgentLogImpl::AgentLogImpl(const char* fname) : AgentLog()
 {
 	set_dest(fname);
@@ -344,13 +344,13 @@ AgentLogImpl::~AgentLogImpl()
 
 /**
  * Set destination of logs to a given file.
- * 
+ *
  * @param fname - A file name. "" directs logs to stdout.
  */
 void AgentLogImpl::set_dest(const char* fname)
 {
 	close_needed = false;
-	if ((!fname) || (strlen(fname) == 0)) 
+	if ((!fname) || (strlen(fname) == 0))
 		logfile = stdout;
 	else {
 		logfile = fopen(fname, "a");
@@ -363,7 +363,7 @@ void AgentLogImpl::set_dest(const char* fname)
 
 /**
  * Set destination of logs to a given file.
- * 
+ *
  * @param fname - A pointer to an open log file. 0 directs logs to stdout.
  */
 void AgentLogImpl::set_dest(FILE* fp)
@@ -415,31 +415,33 @@ LogEntry* DefaultLog::entry = 0;
 SnmpSynchronized DefaultLog::mutex;
 #endif
 
-void DefaultLog::cleanup() 
+void DefaultLog::cleanup()
 {
-  lock(); 
-  if (instance) delete instance; 
-  instance = 0; 
+  lock();
+  if (instance) delete instance;
+  instance = 0;
   unlock();
 }
 
 AgentLog* DefaultLog::init_ts(AgentLog* logger)
-{ 
-  AgentLog* r;
-  if (!( r = instance)) {
+{
+  AgentLog* r = instance;
+  if (!r)
+  {
     lock();
-    if (!instance) { 
+    if (!instance)
+    {
 #ifdef WITH_LOG_PROFILES
 #ifdef DEFAULT_LOG_PROFILE
       initLogProfiles();
 #endif
 #endif
       if(!logger)
-	logger = new AgentLogImpl();
+        logger = new AgentLogImpl();
       instance = logger;
-      r = instance;
-    } 
+    }
+    r = instance;
     unlock();
-  } 
-  return r; 
+  }
+  return r;
 }
