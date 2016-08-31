@@ -126,6 +126,8 @@ install-static: lib install-common
 
 install-shared: shlib install-common
 	install $(LIBSNMPPLUS_SHARED) $(DESTDIR)$(INSTLIBPATH)
+	ln -sf $(notdir $(LIBSNMPPLUS_SHARED)) $(DESTDIR)$(INSTLIBPATH)/$(LIBSNMPPLUS_SHARED_NOVERSION)
+	ln -sf $(notdir $(LIBSNMPPLUS_SHARED)) $(DESTDIR)$(INSTLIBPATH)/$(LIBSNMPPLUS_SHARED_MAIN)
 
 install: install-static install-shared
 
