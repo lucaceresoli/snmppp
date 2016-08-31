@@ -105,10 +105,17 @@ void LogEntry::init(void)
 #else
 #ifdef POSIX_THREADS
         pthread_t pid = pthread_self();
-        unsigned char *ptc = (unsigned char*)(void*)(&pid);
-        OctetStr os;
-        os.set_data(ptc, sizeof(pthread_t));
-        add_string(os.get_printable_hex());
+	if (sizeof(pthread_t) == sizeof(long))
+	{
+	  add_integer(static_cast<long>(pid));
+	}
+	else
+	{
+	  unsigned char *ptc = (unsigned char*)(void*)(&pid);
+	  OctetStr os;
+	  os.set_data(ptc, sizeof(pthread_t));
+	  add_string(os.get_printable_hex());
+	}
 #else
 #ifdef HAVE_GETPID
 	pid_t pid = getpid();

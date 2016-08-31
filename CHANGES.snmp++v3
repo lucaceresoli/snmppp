@@ -1,3 +1,9 @@
+Changes snmp++v3.3.7
+====================
+
+- Fixed: Added missing operator=() functions for Mac, Ipx and IpxSockAddress.
+- Fixed: Fixed copy-paste-error for ipxaddress option in auto_conf build.
+
 Changes snmp++v3.3.6
 ====================
 

@@ -29,7 +29,7 @@ dnl Process this file with autoconf to produce a configure script.
 
 dnl don't require higher autoconf version for win32 support
 AC_PREREQ([2.64])
-AC_INIT([snmp++], [3.3.6], [support@agentpp.com],[snmp++])
+AC_INIT([snmp++], [3.3.7], [support@agentpp.com],[snmp++])
 SNMP_PP_MAJOR_VERSION=3
 SNMP_PP_MINOR_VERSION=3
 SNMP_PP_MICRO_VERSION=6
@@ -124,9 +124,9 @@ AC_ARG_ENABLE(macaddress,
 [  --enable-macaddress     enable support of class MacAddress (default: off)
   --disable-macaddress    disable support of class MacAddress],
 ENABLE_MACADDRESS=$enableval, ENABLE_MACADDRESS=no)
-AC_ARG_ENABLE(macaddress,
-[  --enable-macaddress     enable support of class IpxAddress (default: off)
-  --disable-macaddress    disable support of class IpxAddress],
+AC_ARG_ENABLE(ipxaddress,
+[  --enable-ipxaddress     enable support of class IpxAddress (default: off)
+  --disable-ipxaddress    disable support of class IpxAddress],
 ENABLE_IPXADDRESS=$enableval, ENABLE_IPXADDRESS=no)
 
 AC_ARG_WITH([log-profile], [

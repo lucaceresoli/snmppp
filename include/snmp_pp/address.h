@@ -51,7 +51,7 @@
   addresses into easy to use, safe and portable classes.
 
 =====================================================================*/
-// $Id: address.h 2789 2014-11-28 05:53:35Z fock $
+// $Id: address.h 3031 2016-02-26 20:37:46Z katz $
 
 #ifndef _ADDRESS
 #define _ADDRESS
@@ -268,12 +268,12 @@ class DLLOPT Address : public SnmpSyntax
    */
   virtual addr_type get_type() const = 0;
 
-  using SnmpSyntax::operator =;
+  using SnmpSyntax::operator=;
   /**
    * Overloaded assignment operator.
    */
-  virtual Address & operator = (const Address &val) = 0;
-  virtual Address & operator = (const char *str) { valid_flag = parse_address(str); addr_changed = true; return *this; }
+  virtual Address & operator=(const Address &val) = 0;
+  virtual Address & operator=(const char *str) { valid_flag = parse_address(str); addr_changed = true; return *this; }
 
   // return a hash key
   virtual unsigned int hashFunction() const { return 0; }
@@ -353,7 +353,7 @@ class DLLOPT IpAddress : public Address
    */
   ~IpAddress() {}
 
-  using Address::operator =;
+  using Address::operator=;
 
   /**
    * Map other SnmpSyntax objects to IpAddress.
@@ -363,7 +363,7 @@ class DLLOPT IpAddress : public Address
   /**
    * Map other Address objects to IpAddress.
    */
-  virtual Address& operator = (const Address &val);
+  virtual Address& operator=(const Address &val);
 
   /**
    * Overloaded assignment operator for other IP addresses.
@@ -573,7 +573,7 @@ class DLLOPT UdpAddress : public IpAddress
    */
   ~UdpAddress() {}
 
-  using IpAddress::operator =;
+  using IpAddress::operator=;
 
   /**
    * Map other SnmpSyntax objects to UdpAddress.
@@ -583,7 +583,7 @@ class DLLOPT UdpAddress : public IpAddress
   /**
    * Map other Address objects to UdpAddress.
    */
-  virtual Address & operator = (const Address &val);
+  virtual Address & operator=(const Address &val);
 
   /**
    * Overloaded assignment operator for UdpAddress.
@@ -723,13 +723,20 @@ public:
    */
   virtual int get_asn1_length() const { return MACLEN + 2; }
 
-  using Address::operator =;
+  using Address::operator=;
   /**
    * Map other SnmpSyntax objects to MacAddress.
    */
   virtual SnmpSyntax& operator=(const SnmpSyntax &val);
 
-  // assignment to another IpAddress object overloaded
+  /**
+   * Map other Address objects to MacAddress.
+   */
+  virtual Address& operator=(const Address &val);
+
+  /**
+   * Overloaded assignment operator for other Mac addresses.
+   */
   MacAddress& operator=(const MacAddress &macaddress);
 
   /**
@@ -821,13 +828,20 @@ public:
    */
   virtual int get_asn1_length() const  { return IPXLEN + 2; }
 
-  using Address::operator =;
+  using Address::operator=;
   /**
    * Map other SnmpSyntax objects to IpxAddress.
    */
   virtual SnmpSyntax& operator=(const SnmpSyntax &val);
 
-  // assignment to another IpAddress object overloaded
+  /**
+   * Map other Address objects to IpxAddress.
+   */
+  virtual Address& operator=(const Address &val);
+
+  /**
+   * Overloaded assignment operator for other Ipx addresses.
+   */
   virtual IpxAddress& operator=(const IpxAddress &ipxaddress);
 
 #ifdef _MAC_ADDRESS
@@ -925,11 +939,17 @@ public:
    */
   virtual int get_asn1_length() const { return IPXSOCKLEN + 2; }
 
-  using IpxAddress::operator =;
+  using IpxAddress::operator=;
+
   /**
    * Map other SnmpSyntax objects to IpxSockAddress.
    */
   virtual SnmpSyntax& operator=(const SnmpSyntax &val);
+
+  /**
+   * Map other Address objects to Ipx address.
+   */
+  virtual Address& operator=(const Address &val);
 
   // assignment to another IpAddress object overloaded
   virtual IpxSockAddress& operator=(const IpxSockAddress &ipxaddr);
@@ -1062,7 +1082,7 @@ class DLLOPT GenAddress : public Address
    */
   SnmpSyntax *clone() const { return (SnmpSyntax *)new GenAddress(*this); }
 
-  using Address::operator =;
+  using Address::operator=;
   /**
    * Overloaded assignment operator for a GenAddress.
    */
