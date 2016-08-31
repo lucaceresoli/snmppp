@@ -28,10 +28,10 @@
 #ifndef _CONFIG_SNMP_PP_H_
 #define _CONFIG_SNMP_PP_H_
 
-#define SNMP_PP_VERSION_STRING "3.3.4"
+#define SNMP_PP_VERSION_STRING "3.3.5"
 #define SNMP_PP_VERSION 3
 #define SNMP_PP_RELEASE 3
-#define SNMP_PP_PATCHLEVEL 4
+#define SNMP_PP_PATCHLEVEL 5
 
 //! The maximum size of a message that can be sent or received.
 #define MAX_SNMP_PACKET 4096
@@ -49,6 +49,10 @@
 #define DLLOPT
 #define DLLOPT_TEMPL
 #endif
+#endif
+
+#ifndef ON
+#define ON 1
 #endif
 
 /*
@@ -94,15 +98,15 @@
 
 #if defined(_SNMPv3) || !defined(_NO_SNMPv3)
 #  if defined(HAVE_LIBSSL)
-#    define _USE_OPENSSL 1
+#    define _USE_OPENSSL
 #  elif defined(HAVE_LIBTOMCRYPT)
-#    define _USE_LIBTOMCRYPT 1
+#    define _USE_LIBTOMCRYPT
 #  elif HAVE_LIBDES
-#    define _USE_3DES_EDE 1
+#    define _USE_3DES_EDE
 #  else
 #    warn No crypto library found - disable SNMPv3
 #    undef _SNMPv3
-#    define _NO_SNMPv3 1
+#    define _NO_SNMPv3
 #  endif
 #endif
 

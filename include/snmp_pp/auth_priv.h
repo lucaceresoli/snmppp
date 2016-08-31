@@ -24,7 +24,7 @@
   _##  upon this software code base. 
   _##  
   _##########################################################################*/
-// $Id: auth_priv.h 2359 2013-05-09 20:07:01Z fock $
+// $Id: auth_priv.h 2833 2015-03-15 10:33:08Z katz $
 
 #ifndef _AUTH_PRIV_
 #define _AUTH_PRIV_
@@ -62,7 +62,7 @@ class DLLOPT Auth
 {
 public:
 
-  virtual ~Auth() {};
+  virtual ~Auth() {}
 
   /**
    * Generate the localized key for the given password and engine id.
@@ -191,7 +191,7 @@ public:
 class DLLOPT Priv
 {
 public:
-  virtual ~Priv() {};
+  virtual ~Priv() {}
 
   /**
    * Encrypt the buffer with the given key.
@@ -302,7 +302,7 @@ public:
   /**
    * Set the pointer to the salt that should be used.
    */
-  virtual void set_salt(pp_uint64 *new_salt) { salt = new_salt; };
+  virtual void set_salt(pp_uint64 *new_salt) { salt = new_salt; }
 
   /**
    * Get the maximum length that is needed for the
@@ -735,7 +735,7 @@ public:
 #if defined(_USE_LIBTOMCRYPT) || defined(_USE_OPENSSL)
 
 /**
- * Encryption module using AES (only available with libtomcrypt).
+ * Encryption module using AES.
  *
  * @see Priv
  */
@@ -792,6 +792,38 @@ public:
 #endif
   bool need_byteswap;
 };
+
+/**
+ * Encryption module using AES but using non standard key extension.
+ *
+ * @note This class adds compatibility with some devices that
+ *       illegally use the 3DES key extension algorithm with
+ *       AES privacy.
+ * @see PrivAES
+ */
+class DLLOPT PrivAESW3DESKeyExt: public PrivAES
+{
+public:
+
+  PrivAESW3DESKeyExt(const int aes_type_);
+
+  int extend_short_key(const unsigned char *password,
+                       const unsigned int   password_len,
+                       const unsigned char *engine_id,
+                       const unsigned int   engine_id_len,
+                       unsigned char       *key,
+                       unsigned int        *key_len,
+                       const unsigned int   max_key_len,
+                       Auth                *auth);
+
+  const char *get_id_string() const;
+
+  static int map_aes_type(const int t);
+
+private:
+  int own_aes_type;
+};
+
 #endif // _USE_LIBTOMCRYPT or _USE_OPENSSL
 
 #ifdef _USE_3DES_EDE

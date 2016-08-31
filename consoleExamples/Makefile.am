@@ -71,3 +71,4 @@ snmpDiscover_LDADD =	$(abs_top_builddir)/src/libsnmp++.la @LINKFLAGS@
 test_app_SOURCES =	test_app.cpp
 test_app_LDADD =	$(abs_top_builddir)/src/libsnmp++.la @LINKFLAGS@
 
+EXTRA_DIST = Makefile.dunix Makefile.bcc Makefile.gcc_solaris Makefile.linux Makefile.solaris common.mk

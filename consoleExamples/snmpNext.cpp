@@ -43,7 +43,7 @@
 
   Peter E. Mellquist
 */
-char snmpnext_cpp_version[]="@(#) SNMP++ $Id: snmpNext.cpp 2471 2013-11-14 19:49:48Z fock $";
+char snmpnext_cpp_version[]="@(#) SNMP++ $Id: snmpNext.cpp 2647 2014-05-11 11:22:42Z fock $";
 #include <libsnmp.h>
 
 #ifdef WIN32

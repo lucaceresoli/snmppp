@@ -51,6 +51,10 @@
 #endif
 #endif
 
+#ifndef ON
+#define ON 1
+#endif
+
 /*
  * some permanent parts from autoconf process
  */
@@ -94,15 +98,15 @@
 
 #if defined(_SNMPv3) || !defined(_NO_SNMPv3)
 #  if defined(HAVE_LIBSSL)
-#    define _USE_OPENSSL 1
+#    define _USE_OPENSSL
 #  elif defined(HAVE_LIBTOMCRYPT)
-#    define _USE_LIBTOMCRYPT 1
+#    define _USE_LIBTOMCRYPT
 #  elif HAVE_LIBDES
-#    define _USE_3DES_EDE 1
+#    define _USE_3DES_EDE
 #  else
 #    warn No crypto library found - disable SNMPv3
 #    undef _SNMPv3
-#    define _NO_SNMPv3 1
+#    define _NO_SNMPv3
 #  endif
 #endif
 

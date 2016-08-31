@@ -24,7 +24,7 @@
   _##  upon this software code base. 
   _##  
   _##########################################################################*/
-char auth_priv_version[]="@(#) SNMP++ $Id: auth_priv.cpp 2361 2013-05-09 22:15:06Z katz $";
+char auth_priv_version[]="@(#) SNMP++ $Id: auth_priv.cpp 2839 2015-04-25 20:23:21Z katz $";
 
 #include <libsnmp.h>
 
@@ -93,14 +93,14 @@ typedef des_key_schedule      DESCBCType;
 #define DES_CBC_START_ENCRYPT(c, iv, k, kl, r, s) \
                  if (des_key_sched((C_Block*)(k), s) < 0) \
                  { \
-		   debugprintf(0, "Starting DES encryption failed."); \
-		   return SNMPv3_USM_ERROR; \
+                   debugprintf(0, "Starting DES encryption failed."); \
+                   return SNMPv3_USM_ERROR; \
                  }
 #define DES_CBC_START_DECRYPT(c, iv, k, kl, r, s) \
                  if (des_key_sched((C_Block*)(k), s) < 0) \
                  { \
-		   debugprintf(0, "Starting DES decryption failed."); \
-		   return SNMPv3_USM_ERROR; \
+                   debugprintf(0, "Starting DES decryption failed."); \
+                   return SNMPv3_USM_ERROR; \
                  }
 
 #define DES_CBC_ENCRYPT(pt, ct, s, iv, l) \
@@ -141,28 +141,28 @@ typedef symmetric_CBC         DESCBCType;
 #define DES_CBC_START_ENCRYPT(c, iv, k, kl, r, s) \
                  if (cbc_start(c, iv, k, kl, r, &(s)) != CRYPT_OK) \
                  { \
-		   debugprintf(0, "Starting DES encryption failed."); \
-		   return SNMPv3_USM_ERROR; \
+                   debugprintf(0, "Starting DES encryption failed."); \
+                   return SNMPv3_USM_ERROR; \
                  }
 
 #define DES_CBC_START_DECRYPT(c, iv, k, kl, r, s) \
                  if (cbc_start(c, iv, k, kl, r, &(s)) != CRYPT_OK) \
                  { \
-		   debugprintf(0, "Starting DES decryption failed."); \
-		   return SNMPv3_USM_ERROR; \
+                   debugprintf(0, "Starting DES decryption failed."); \
+                   return SNMPv3_USM_ERROR; \
                  }
 
 #define DES_CBC_ENCRYPT(pt, ct, s, iv, l) \
                  if (cbc_encrypt(pt, ct, l, &(s)) != CRYPT_OK) \
                  { \
-		   debugprintf(0, "Error during DES encryption."); \
-		   return SNMPv3_USM_ERROR; \
+                   debugprintf(0, "Error during DES encryption."); \
+                   return SNMPv3_USM_ERROR; \
                  }
 #define DES_CBC_DECRYPT(ct, pt, s, iv, l) \
                  if (cbc_decrypt(ct, pt, l, &(s)) != CRYPT_OK) \
                  { \
-		   debugprintf(0, "Error during DES decryption."); \
-		   return SNMPv3_USM_ERROR; \
+                   debugprintf(0, "Error during DES decryption."); \
+                   return SNMPv3_USM_ERROR; \
                  }
 #define DES_MEMSET(s, c, l)   memset(&(s), c, l)
 /* -- END: Defines for LibTomCrypt -- */
@@ -209,14 +209,14 @@ typedef des_key_schedule      DESCBCType;
 #define DES_CBC_START_ENCRYPT(c, iv, k, kl, r, s) \
                  if (des_key_sched((C_Block*)(k), s) < 0) \
                  { \
-		   debugprintf(0, "Starting DES encryption failed."); \
-		   return SNMPv3_USM_ERROR; \
+                   debugprintf(0, "Starting DES encryption failed."); \
+                   return SNMPv3_USM_ERROR; \
                  }
 #define DES_CBC_START_DECRYPT(c, iv, k, kl, r, s) \
                  if (des_key_sched((C_Block*)(k), s) < 0) \
                  { \
-		   debugprintf(0, "Starting DES decryption failed."); \
-		   return SNMPv3_USM_ERROR; \
+                   debugprintf(0, "Starting DES decryption failed."); \
+                   return SNMPv3_USM_ERROR; \
                  }
 
 #define DES_CBC_ENCRYPT(pt, ct, s, iv, l) \
@@ -234,6 +234,65 @@ typedef des_key_schedule      DESCBCType;
 #endif // _USE_LIBTOMCRYPT
 
 #endif // _USE_OPENSSL
+
+
+// 3DES key extension used by two classes
+int des3_extend_short_key(const unsigned char * /* password */,
+                          const unsigned int    /* password_len */,
+                          const unsigned char *engine_id,
+                          const unsigned int   engine_id_len,
+                          unsigned char       *key,
+                          unsigned int        *key_len,
+                          const unsigned int   max_key_len,
+                          Auth                *auth,
+                          const unsigned int min_key_len)
+{
+  if (max_key_len < min_key_len)
+    return SNMPv3_USM_ERROR;
+
+  unsigned int p2k_output_len = *key_len;
+  unsigned char *p2k_buf = new unsigned char[p2k_output_len];
+  int res = 0;
+
+  if (!p2k_buf) return SNMPv3_USM_ERROR;
+
+  // p2k function takes the old key as input
+  unsigned char *p2k_input_buf = key;
+  unsigned int   p2k_input_len = *key_len;
+
+  while (*key_len < min_key_len)
+  {
+    unsigned int p2k_buf_len = p2k_output_len;
+
+    res = auth->password_to_key(p2k_input_buf, p2k_input_len,
+                                engine_id, engine_id_len,
+                                p2k_buf, &p2k_buf_len);
+
+    if (res != SNMPv3_USM_OK)
+      break;
+
+    unsigned int copy_bytes = min_key_len - *key_len;
+
+    if (copy_bytes > p2k_buf_len)
+        copy_bytes = p2k_buf_len;
+
+    if (*key_len + copy_bytes > max_key_len)
+        copy_bytes = max_key_len - *key_len;
+
+    memcpy(key + *key_len, p2k_buf, copy_bytes);
+
+    // save just generated key for next iteration
+    p2k_input_buf = key + *key_len;
+    p2k_input_len = p2k_buf_len;
+
+    *key_len += copy_bytes;
+  }
+
+  if (p2k_buf) delete [] p2k_buf;
+
+  return res;
+}
+
 
 AuthPriv::AuthPriv(int &construct_state)
 {
@@ -610,8 +669,8 @@ int AuthPriv::get_keychange_value(const int       auth_prot,
       debughexcprintf(21, "loop tmp2", tmp.data(), tmp.len());
       delta.set_len(delta.len() + a->get_hash_len());
       for (int kk=0; kk < a->get_hash_len(); kk++)
-	  delta[k * a->get_hash_len() + kk]
-	      = tmp[kk] ^ new_key[k * a->get_hash_len() + kk];
+          delta[k * a->get_hash_len() + kk]
+              = tmp[kk] ^ new_key[k * a->get_hash_len() + kk];
       debughexcprintf(21, "loop delta", delta.data(), delta.len());
   }
 
@@ -713,9 +772,9 @@ int AuthPriv::password_to_key_priv(const int            auth_prot,
     return SNMPv3_USM_ERROR; // TODO: better error code!
 
   int res = password_to_key_auth(auth_prot,
-				 password, password_len,
-				 engine_id, engine_id_len,
-				 key, key_len);
+                                 password, password_len,
+                                 engine_id, engine_id_len,
+                                 key, key_len);
   if (res != SNMPv3_USM_OK)
     return res;
 
@@ -723,8 +782,8 @@ int AuthPriv::password_to_key_priv(const int            auth_prot,
   if (*key_len < min_key_len)
   {
     res = p->extend_short_key(password, password_len,
-			      engine_id, engine_id_len,
-			      key, key_len, max_key_len, a);
+                              engine_id, engine_id_len,
+                              key, key_len, max_key_len, a);
     if (res != SNMPv3_USM_OK)
       return res;
   }
@@ -771,8 +830,8 @@ int AuthPriv::decrypt_msg(const int            priv_prot,
                           unsigned int        *out_buffer_len,
                           const unsigned char *privacy_params,
                           const unsigned int   privacy_params_len,
-			  const unsigned long  engine_boots,
-			  const unsigned long  engine_time)
+                          const unsigned long  engine_boots,
+                          const unsigned long  engine_time)
 {
   /* check for priv protocol */
   Priv *p = get_priv(priv_prot);
@@ -783,7 +842,7 @@ int AuthPriv::decrypt_msg(const int            priv_prot,
   return p->decrypt(key, key_len, buffer, buffer_len,
                     out_buffer, out_buffer_len,
                     privacy_params, privacy_params_len,
-		    engine_boots, engine_time);
+                    engine_boots, engine_time);
 }
 
 
@@ -966,9 +1025,9 @@ int AuthSHA::password_to_key(const unsigned char *password,
 
 #ifdef __DEBUG
   debugprintf(5,"password_to_key SHA: password: (%s).",
-	      OctetStr(password, password_len).get_printable());
+              OctetStr(password, password_len).get_printable());
   debugprintf(5,"password_to_key SHA: engine_id: (%s).",
-	      OctetStr(engine_id, engine_id_len).get_printable());
+              OctetStr(engine_id, engine_id_len).get_printable());
 #endif
 
   SHAHashStateType sha_hash_state;
@@ -1105,7 +1164,7 @@ int AuthSHA::auth_inc_msg(const unsigned char *key,
   if (auth_par_len != 12)
   {
     debugprintf(4, "SHA illegal digest length (%d), authentication FAILED.",
-		auth_par_len);
+                auth_par_len);
     return SNMPv3_USM_AUTHENTICATION_FAILURE;
   }
 
@@ -1292,7 +1351,7 @@ int AuthMD5::auth_inc_msg(const unsigned char *key,
   if (auth_par_len != 12)
   {
     debugprintf(4, "MD5 illegal digest length (%d), authentication FAILED.",
-		auth_par_len);
+                auth_par_len);
     return SNMPv3_USM_AUTHENTICATION_FAILURE;
   }
 
@@ -1434,8 +1493,8 @@ int PrivDES::decrypt(const unsigned char *key,
                      unsigned int  *outBuffer_len,
                      const unsigned char *privacy_params,
                      const unsigned int   privacy_params_len,
-		     const unsigned long  /*engine_boots*/,
-		     const unsigned long  /*engine_time*/)
+                     const unsigned long  /*engine_boots*/,
+                     const unsigned long  /*engine_time*/)
 {
   unsigned char initVect[8];
 
@@ -1557,8 +1616,8 @@ int PrivIDEA::decrypt(const unsigned char *key,
                       unsigned int  *out_buffer_len,
                       const unsigned char *privacy_params,
                       const unsigned int   privacy_params_len,
-		      const unsigned long  /*engine_boots*/,
-		      const unsigned long  /*engine_time*/)
+                      const unsigned long  /*engine_boots*/,
+                      const unsigned long  /*engine_time*/)
 {
   unsigned char iv[8];
   IDEAContext CFB_Context;
@@ -1645,18 +1704,18 @@ const char *PrivAES::get_id_string() const
     case SNMP_PRIVPROTOCOL_AES256: return "AES256";  break;
     default:                       return "error";   break;
   }
-};
+}
 
 int PrivAES::encrypt(const unsigned char *key,
-		     const unsigned int   key_len,
-		     const unsigned char *buffer,
-		     const unsigned int   buffer_len,
-		     unsigned char       *out_buffer,
-		     unsigned int        *out_buffer_len,
-		     unsigned char       *privacy_params,
-		     unsigned int        *privacy_params_len,
-		     const unsigned long  engine_boots,
-		     const unsigned long  engine_time)
+                     const unsigned int   key_len,
+                     const unsigned char *buffer,
+                     const unsigned int   buffer_len,
+                     unsigned char       *out_buffer,
+                     unsigned int        *out_buffer_len,
+                     unsigned char       *privacy_params,
+                     unsigned int        *privacy_params_len,
+                     const unsigned long  engine_boots,
+                     const unsigned long  engine_time)
 {
   unsigned char initVect[16];
   pp_uint64 my_salt = (*salt)++;
@@ -1700,12 +1759,12 @@ int PrivAES::encrypt(const unsigned char *key,
   {
     
     debugprintf(1, "AES_set_encrypt_key(%p, %d, %p) failed.",
-		key, key_len * 8, &symcfb);
+                key, key_len * 8, &symcfb);
     return SNMPv3_USM_ERROR;
   }
 
   AES_cfb128_encrypt(buffer, out_buffer, buffer_len,
-		     &symcfb, initVect, &dummy, AES_ENCRYPT);
+                     &symcfb, initVect, &dummy, AES_ENCRYPT);
 #else
   symmetric_CFB symcfb;
 
@@ -1731,15 +1790,15 @@ int PrivAES::encrypt(const unsigned char *key,
 }
 
 int PrivAES::decrypt(const unsigned char *key,
-		     const unsigned int   key_len,
-		     const unsigned char *buffer,
-		     const unsigned int   buffer_len,
-		     unsigned char       *out_buffer,
-		     unsigned int        *out_buffer_len,
-		     const unsigned char *privacy_params,
-		     const unsigned int   privacy_params_len,
-		     const unsigned long  engine_boots,
-		     const unsigned long  engine_time)
+                     const unsigned int   key_len,
+                     const unsigned char *buffer,
+                     const unsigned int   buffer_len,
+                     unsigned char       *out_buffer,
+                     unsigned int        *out_buffer_len,
+                     const unsigned char *privacy_params,
+                     const unsigned int   privacy_params_len,
+                     const unsigned long  engine_boots,
+                     const unsigned long  engine_time)
 {
   unsigned char initVect[16];
 
@@ -1761,7 +1820,7 @@ int PrivAES::decrypt(const unsigned char *key,
 
   AES_set_encrypt_key(key, key_len * 8, &symcfb);
   AES_cfb128_encrypt(buffer, out_buffer, buffer_len,
-		     &symcfb, initVect, &dummy, AES_DECRYPT);
+                     &symcfb, initVect, &dummy, AES_DECRYPT);
 #else
   symmetric_CFB symcfb;
 
@@ -1818,7 +1877,7 @@ int PrivAES::extend_short_key(const unsigned char *password,
     if (copy_bytes > auth->get_hash_len())
       copy_bytes = auth->get_hash_len();
     if (*key_len + copy_bytes > max_key_len)
-	copy_bytes = max_key_len - *key_len;
+        copy_bytes = max_key_len - *key_len;
     memcpy(key + *key_len, hash_buf, copy_bytes);
     *key_len += copy_bytes;
   }
@@ -1828,6 +1887,54 @@ int PrivAES::extend_short_key(const unsigned char *password,
   return res;
 }
 
+PrivAESW3DESKeyExt::PrivAESW3DESKeyExt(const int aes_type_)
+    : PrivAES(PrivAESW3DESKeyExt::map_aes_type(aes_type_))
+{
+        if (PrivAES::get_id() != -1)
+                own_aes_type = aes_type_;
+        else
+                own_aes_type = -1;
+}
+
+int PrivAESW3DESKeyExt::map_aes_type(const int t)
+{
+  switch (t)
+  {
+    case SNMP_PRIVPROTOCOL_AES128W3DESKEYEXT: return SNMP_PRIVPROTOCOL_AES128; break;
+    case SNMP_PRIVPROTOCOL_AES192W3DESKEYEXT: return SNMP_PRIVPROTOCOL_AES192; break;
+    case SNMP_PRIVPROTOCOL_AES256W3DESKEYEXT: return SNMP_PRIVPROTOCOL_AES256; break;
+    default:                                  return -1; break;
+  }
+}
+
+
+int PrivAESW3DESKeyExt::extend_short_key(const unsigned char *password,
+                                         const unsigned int   password_len,
+                                         const unsigned char *engine_id,
+                                         const unsigned int   engine_id_len,
+                                         unsigned char       *key,
+                                         unsigned int        *key_len,
+                                         const unsigned int   max_key_len,
+                                         Auth                *auth)
+{
+  return des3_extend_short_key(password, password_len,
+                               engine_id, engine_id_len,
+                               key, key_len,
+                               max_key_len,
+                               auth,
+                               (unsigned)get_min_key_len());
+}
+
+const char *PrivAESW3DESKeyExt::get_id_string() const
+{
+  switch (own_aes_type)
+  {
+    case SNMP_PRIVPROTOCOL_AES128W3DESKEYEXT: return "AES128W3DESKeyExt";  break;
+    case SNMP_PRIVPROTOCOL_AES192W3DESKEYEXT: return "AES192W3DESKeyExt";  break;
+    case SNMP_PRIVPROTOCOL_AES256W3DESKEYEXT: return "AES256W3DESKeyExt";  break;
+    default:                       return "error";   break;
+  }
+}
 
 #endif // _USE_LIBTOMCRYPT or _USE_OPENSSL
 
@@ -1845,15 +1952,15 @@ Priv3DES_EDE::Priv3DES_EDE()
 
 int 
 Priv3DES_EDE::encrypt(const unsigned char *key,
-		      const unsigned int   key_len,
-		      const unsigned char *buffer,
-		      const unsigned int   buffer_len,
-		      unsigned char       *out_buffer,
-		      unsigned int        *out_buffer_len,
-		      unsigned char       *privacy_params,
-		      unsigned int        *privacy_params_len,
-		      const unsigned long  engine_boots,
-		      const unsigned long  engine_time)
+                      const unsigned int   key_len,
+                      const unsigned char *buffer,
+                      const unsigned int   buffer_len,
+                      unsigned char       *out_buffer,
+                      unsigned int        *out_buffer_len,
+                      unsigned char       *privacy_params,
+                      unsigned int        *privacy_params_len,
+                      const unsigned long  engine_boots,
+                      const unsigned long  /* engine_time */)
 {
   unsigned char initVect[8];
   pp_uint64     my_salt = (*salt)++;
@@ -1951,7 +2058,7 @@ Priv3DES_EDE::encrypt(const unsigned char *key,
     for(unsigned int k = 0; k <= (buffer_len - 8); k += 8) 
     {
       DES_EDE3_CBC_ENCRYPT(buffer+k, out_buffer+k, 8,
-			   ks1, ks2, ks3, initVect);
+                           ks1, ks2, ks3, initVect);
     }
 
   // Last part
@@ -1962,9 +2069,9 @@ Priv3DES_EDE::encrypt(const unsigned char *key,
       int start = buffer_len - (buffer_len % 8);
       memset(tmp_buf, 0, 8);
       for (unsigned int l = start; l < buffer_len; l++)
-	*tmp_buf_ptr++ = buffer[l];
+        *tmp_buf_ptr++ = buffer[l];
       DES_EDE3_CBC_ENCRYPT(tmp_buf, out_buffer + start, 8,
-			   ks1, ks2, ks3, initVect);
+                           ks1, ks2, ks3, initVect);
       
       *out_buffer_len = buffer_len + 8 - (buffer_len % 8);
     }
@@ -1988,21 +2095,29 @@ Priv3DES_EDE::encrypt(const unsigned char *key,
 
 int 
 Priv3DES_EDE::decrypt(const unsigned char *key,
-		      const unsigned int   key_len,
-		      const unsigned char *buffer,
-		      const unsigned int   buffer_len,
-		      unsigned char       *out_buffer,
-		      unsigned int        *out_buffer_len,
-		      const unsigned char *privacy_params,
-		      const unsigned int   privacy_params_len,
-		      const unsigned long  engine_boots,
-		      const unsigned long  engine_time)
+                      const unsigned int   key_len,
+                      const unsigned char *buffer,
+                      const unsigned int   buffer_len,
+                      unsigned char       *out_buffer,
+                      unsigned int        *out_buffer_len,
+                      const unsigned char *privacy_params,
+                      const unsigned int   privacy_params_len,
+                      const unsigned long  /* engine_boots */,
+                      const unsigned long  /* engine_time */)
 {
   unsigned char initVect[8];
 
   /* Privacy params length has to be 8  && Length has to be a multiple of 8 */
   if (( buffer_len % 8 ) || (privacy_params_len != 8))
     return SNMPv3_USM_DECRYPTION_ERROR;
+
+  /* check key length */
+  if (key_len < TRIPLEDES_EDE_KEY_LEN)
+  {
+    debugprintf(4, "Key too small: should be %d, is (%d).",
+                TRIPLEDES_EDE_KEY_LEN, key_len);
+    return SNMPv3_USM_DECRYPTION_ERROR;
+  }
 
   for (int i=0; i<8; i++)
     initVect[i] = privacy_params[i] ^ key[i+24];
@@ -2039,7 +2154,7 @@ Priv3DES_EDE::decrypt(const unsigned char *key,
   for(unsigned int k=0; k<buffer_len; k+=8 ) 
     {
       DES_EDE3_CBC_DECRYPT(buffer+k, out_buffer+k, 8,
-			   ks1, ks2, ks3, initVect);
+                           ks1, ks2, ks3, initVect);
     }
   /* Clear context (paranoia!) */
   DES_MEMSET(ks1, 0, sizeof(ks1));
@@ -2059,59 +2174,22 @@ Priv3DES_EDE::decrypt(const unsigned char *key,
 
 int 
 Priv3DES_EDE::extend_short_key(const unsigned char *password,
-			       const unsigned int   password_len,
-			       const unsigned char *engine_id,
-			       const unsigned int   engine_id_len,
-			       unsigned char       *key,
-			       unsigned int        *key_len,
-			       const unsigned int   max_key_len,
-			       Auth                *auth)
+                               const unsigned int   password_len,
+                               const unsigned char *engine_id,
+                               const unsigned int   engine_id_len,
+                               unsigned char       *key,
+                               unsigned int        *key_len,
+                               const unsigned int   max_key_len,
+                               Auth                *auth)
 {
-  if (max_key_len < TRIPLEDES_EDE_KEY_LEN)
-    return SNMPv3_USM_ERROR;
-
-  unsigned int p2k_output_len = *key_len;
-  unsigned char *p2k_buf = new unsigned char[p2k_output_len];
-  int res = 0;
-
-  if (!p2k_buf) return SNMPv3_USM_ERROR;
-
-  // p2k function takes the old key as input
-  unsigned char *p2k_input_buf = key;
-  unsigned int   p2k_input_len = *key_len;
-
-  while (*key_len < TRIPLEDES_EDE_KEY_LEN)
-  {
-    unsigned int p2k_buf_len = p2k_output_len;
-
-    res = auth->password_to_key(p2k_input_buf, p2k_input_len,
-				engine_id, engine_id_len,
-				p2k_buf, &p2k_buf_len);
-
-    if (res != SNMPv3_USM_OK)
-      break;
-
-    unsigned int copy_bytes = TRIPLEDES_EDE_KEY_LEN - *key_len;
-
-    if (copy_bytes > p2k_buf_len)
-	copy_bytes = p2k_buf_len;
-
-    if (*key_len + copy_bytes > max_key_len)
-	copy_bytes = max_key_len - *key_len;
-
-    memcpy(key + *key_len, p2k_buf, copy_bytes);
-
-    // save just generated key for next iteration
-    p2k_input_buf = key + *key_len;
-    p2k_input_len = p2k_buf_len;
-
-    *key_len += copy_bytes;
-  }
-
-  if (p2k_buf) delete [] p2k_buf;
-
-  return res;
+  return des3_extend_short_key(password, password_len,
+                               engine_id, engine_id_len,
+                               key, key_len,
+                               max_key_len,
+                               auth,
+                               (unsigned)get_min_key_len());
 }
+
 
 #ifdef _TEST
 bool Priv3DES_EDE::test()
@@ -2177,17 +2255,17 @@ bool Priv3DES_EDE::test()
 
 
   status = ap.encrypt_msg(SNMP_PRIVPROTOCOL_3DESEDE,
-			  key, key_len, msg, 53,
-			  enc_buffer, &enc_buffer_len,
-			  priv_params, &priv_params_len, 0x5abc, 0x6def);
+                          key, key_len, msg, 53,
+                          enc_buffer, &enc_buffer_len,
+                          priv_params, &priv_params_len, 0x5abc, 0x6def);
   
   debughexcprintf(1, "encrypted text",
                   enc_buffer, enc_buffer_len);
 
   status = ap.decrypt_msg(SNMP_PRIVPROTOCOL_3DESEDE,
-			  key, key_len, enc_buffer, enc_buffer_len,
-			  dec_buffer, &dec_buffer_len,
-			  priv_params, priv_params_len, 0x5abc, 0x6def);
+                          key, key_len, enc_buffer, enc_buffer_len,
+                          dec_buffer, &dec_buffer_len,
+                          priv_params, priv_params_len, 0x5abc, 0x6def);
 
   dec_buffer[dec_buffer_len] = 0;
   debugprintf(1, "decrypted text: %s",

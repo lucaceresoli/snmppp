@@ -33,7 +33,7 @@
 
       Author:         Peter E Mellquist
 =====================================================================*/
-char snmp_cpp_version[]="#(@) SNMP++ $Id: uxsnmp.cpp 2362 2013-05-10 08:18:22Z fock $";
+char snmp_cpp_version[]="#(@) SNMP++ $Id: uxsnmp.cpp 2790 2014-11-28 05:54:44Z fock $";
 
 /* CK Ng    added support for WIN32 in the whole file */
 
@@ -484,7 +484,7 @@ int receive_snmp_notification(SnmpSocket sock, Snmp &snmp_session,
   OctetStr security_name;
 
 #ifdef _SNMPv3
-  long int security_model;
+  long int security_model = SecurityModel_any;
   if (snmpmsg.is_v3_message())
   {
     int returncode = snmpmsg.unloadv3(pdu, version, engine_id,

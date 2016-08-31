@@ -1,3 +1,16 @@
+Changes snmp++v3.3.5
+====================
+
+- Fixed: Added missing length check for key in Priv3DES_EDE::decrypt().
+- Added: PrivAESW3DESKeyExt class to allow to contact some Cisco devices.
+- Fixed: Configure with --disable-threads
+- Fixed: Usage of uninitialized data.
+- Added: get_net_address_type().
+- Added: clone_as_hex().
+- Added: IpAddress::clone_as_hex.
+- Fixed: Possible NPE.
+- Updated: Version info and fixed old Makefile distribution.
+
 Changes snmp++v3.3.4
 ====================
 

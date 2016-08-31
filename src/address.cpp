@@ -48,7 +48,7 @@
 
   DESCRIPTION:      Implementation file for Address classes.
 =====================================================================*/
-char address_cpp_version[]="@(#) SNMP++ $Id: address.cpp 2361 2013-05-09 22:15:06Z katz $";
+char address_cpp_version[]="@(#) SNMP++ $Id: address.cpp 2788 2014-11-28 05:52:14Z fock $";
 
 #include <libsnmp.h>
 
@@ -168,6 +168,9 @@ int operator==(const Address &lhs, const char *rhs)
 
   if (!rhs && !lhs.valid())
     return true;
+  else if (!rhs) {
+    return false;
+  }
   if (strcmp((const char *)lhs, rhs) == 0)
     return true;
   return false;
@@ -491,6 +494,20 @@ char *IpAddress::friendly_name(int &status)
     this->addr_to_friendly();
   status = iv_friendly_name_status;
   return iv_friendly_name;
+}
+
+// Clone as OctetStr (binary string)
+OctetStr *IpAddress::clone_as_hex() const
+{
+ ADDRESS_TRACE;
+
+ OctetStr *hex = new OctetStr();
+ hex->set_len(get_length());
+ for (int i=0; i < get_length(); i++)
+ {
+   (*hex)[i] = address_buffer[i];
+ }
+ return hex;
 }
 
 // parse a dotted string

@@ -24,7 +24,7 @@
   _##  upon this software code base. 
   _##  
   _##########################################################################*/
-// $Id: usm_v3.h 2359 2013-05-09 20:07:01Z fock $
+// $Id: usm_v3.h 2833 2015-03-15 10:33:08Z katz $
 
 #ifndef _USM_V3
 #define _USM_V3
@@ -95,6 +95,9 @@ namespace Snmp_pp {
 #define SNMP_PRIVPROTOCOL_AES192  20 ///< AES192 (non standard)
 #define SNMP_PRIVPROTOCOL_AES256  21 ///< AES256 (non standard)
 #define SNMP_PRIVPROTOCOL_3DESEDE  3 ///< 3DES (expired draft standard)
+#define SNMP_PRIVPROTOCOL_AES128W3DESKEYEXT  22 ///< AES128 with Key extension algotrithm from 3DESEDE (non standard)
+#define SNMP_PRIVPROTOCOL_AES192W3DESKEYEXT  23 ///< AES192 with Key extension algotrithm from 3DESEDE (non standard)
+#define SNMP_PRIVPROTOCOL_AES256W3DESKEYEXT  24 ///< AES256 with Key extension algotrithm from 3DESEDE (non standard)
 //@}
 
 /** @name USM-ErrorCodes

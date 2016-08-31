@@ -51,7 +51,7 @@
   addresses into easy to use, safe and portable classes.
 
 =====================================================================*/
-// $Id: address.h 2359 2013-05-09 20:07:01Z fock $
+// $Id: address.h 2789 2014-11-28 05:53:35Z fock $
 
 #ifndef _ADDRESS
 #define _ADDRESS
@@ -64,6 +64,7 @@
 #include "snmp_pp/smival.h"
 #include "snmp_pp/collect.h"
 #include "snmp_pp/reentrant.h"
+#include "snmp_pp/octet.h"  // for OctetStr
 
 // include sockets header files
 // for Windows16 and Windows32 include Winsock
@@ -149,6 +150,19 @@ class DLLOPT Address : public SnmpSyntax
   {
     version_ipv4, ///< IPv4
     version_ipv6  ///< IPv6
+  };
+
+  /**
+   * Type returned by Address::get_inet_address_type()
+   */
+  enum InetAddressType
+  {
+    e_unknown = 0,
+    e_ipv4 = 1,
+    e_ipv6 = 2,
+    e_ipv4z = 3,
+    e_ipv6z = 4,
+    e_dns = 16
   };
 
   /**
@@ -411,6 +425,13 @@ class DLLOPT IpAddress : public Address
 	     (have_ipv6_scope ? IP6LEN_WITH_SCOPE : IP6LEN_NO_SCOPE); }
 
   /**
+   * Get the InetAddressType value for this address
+   */
+  virtual int get_inet_address_type() const
+    { return (ip_version == version_ipv4) ? e_ipv4 :
+         (have_ipv6_scope ? e_ipv6z : e_ipv6); }
+
+  /**
    * Return the type of the address.
    * @see Address::addr_type
    * @return Always Address:type_ip
@@ -423,6 +444,13 @@ class DLLOPT IpAddress : public Address
    * @return This method always returns sNMP_SYNTAX_IPADDR.
    */
   virtual SmiUINT32 get_syntax() const { return sNMP_SYNTAX_IPADDR; }
+
+  /**
+   * Return clone as binary string
+   *
+   * @return Pointer to the newly created OctetStr (allocated through new).
+   */
+  virtual OctetStr *clone_as_hex() const;
 
   /**
    * Return the space needed for serialization.
