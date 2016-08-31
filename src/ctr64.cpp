@@ -2,9 +2,9 @@
   _## 
   _##  ctr64.cpp  
   _##
-  _##  SNMP++v3.2.25
+  _##  SNMP++ v3.3
   _##  -----------------------------------------------
-  _##  Copyright (c) 2001-2010 Jochen Katz, Frank Fock
+  _##  Copyright (c) 2001-2013 Jochen Katz, Frank Fock
   _##
   _##  This software is based on SNMP++2.6 from Hewlett Packard:
   _##  
@@ -22,8 +22,6 @@
   _##  "AS-IS" without warranty of any kind, either express or implied. User 
   _##  hereby grants a royalty-free license to any and all derivatives based
   _##  upon this software code base. 
-  _##  
-  _##  Stuttgart, Germany, Thu Sep  2 00:07:47 CEST 2010 
   _##  
   _##########################################################################*/
 /*===================================================================
@@ -51,21 +49,19 @@
 
   DESCRIPTION:         Implementation for Counter64 (64 bit counter class).
 =====================================================================*/
-char counter64_cpp_version[]="@(#) SNMP++ $Id: ctr64.cpp 1558 2009-07-03 20:16:53Z katz $";
+char counter64_cpp_version[]="@(#) SNMP++ $Id: ctr64.cpp 2361 2013-05-09 22:15:06Z katz $";
+
+#include <libsnmp.h>
 
 #include "snmp_pp/ctr64.h"
 #include "snmp_pp/asn1.h"
 #include "snmp_pp/v3.h"
 
-#include <stdio.h>   // for pretty printing...
-
 #ifdef SNMP_PP_NAMESPACE
 namespace Snmp_pp {
 #endif
 
-#define MAX32 4294967295u
-
-
+#if 0
 //------------------[ constructor with no value ]------------------------
 Counter64::Counter64() : m_changed(true)
 {
@@ -89,7 +85,16 @@ Counter64::Counter64(unsigned long lo) : m_changed(true)
   smival.value.hNumber.hipart = 0;
   smival.value.hNumber.lopart = lo;
 }
-
+#if 0
+//------------------[ constructor with full width value ]----------------
+Counter64::Counter64(pp_uint64 val) : m_changed(true)
+{
+  pp_uint64 high = (pp_uint64)UINT32_MAX + (pp_uint64)1; // gotta be UINT32_MAX + 1 to move it to next pos
+  unsigned long h = (unsigned long)(val / high);
+  smival.value.hNumber.hipart = h;
+  smival.value.hNumber.lopart = (unsigned long)(val & UINT32_MAX);
+}
+#endif
 //------------------[ copy constructor ]---------------------------------
 Counter64::Counter64(const Counter64 &ctr64 ) : m_changed(true)
 {
@@ -125,7 +130,7 @@ Counter64& Counter64::operator=(const unsigned long i)
 pp_uint64 Counter64::c64_to_ll(const Counter64 &c64)
 {
   pp_uint64 ll = c64.high();
-  ll *= (pp_uint64)MAX32 + (pp_uint64)1; // gotta be MAX32 + 1 to move it to next pos
+  ll *= (pp_uint64)UINT32_MAX + (pp_uint64)1; // gotta be UINT32_MAX + 1 to move it to next pos
   ll += c64.low();
   return ll;
 }
@@ -134,7 +139,7 @@ pp_uint64 Counter64::c64_to_ll(const Counter64 &c64)
 pp_uint64 Counter64::c64_to_ll() const
 {
   pp_uint64 ll = high();
-  ll *= (pp_uint64)MAX32 + (pp_uint64)1; // gotta be MAX32 + 1 to move it to next pos
+  ll *= (pp_uint64)UINT32_MAX + (pp_uint64)1; // gotta be UINT32_MAX + 1 to move it to next pos
   ll += low();
   return ll;
 }
@@ -143,7 +148,7 @@ pp_uint64 Counter64::c64_to_ll() const
 // convert a 64 bit integer to a Counter64
 Counter64 Counter64::ll_to_c64(const pp_uint64 &ll)
 {
-  pp_uint64 high = (pp_uint64)MAX32 + (pp_uint64)1; // look above
+  pp_uint64 high = (pp_uint64)UINT32_MAX + (pp_uint64)1; // look above
   unsigned long h = (unsigned long)(ll / high);
   return Counter64(h, (unsigned long)(ll - (h * high)));
 }
@@ -219,6 +224,7 @@ bool operator>=(const Counter64 &lhs, const Counter64 &rhs)
   return ( (lhs.high() > rhs.high()) ||
 	   ((lhs.high() == rhs.high()) && (lhs.low() >= rhs.low())));
 }
+#endif
 
 //----------[ return ASCII format ]-------------------------
 // TODO:  Fix up to do real 64bit decimal value printing...
@@ -304,5 +310,5 @@ int Counter64::get_asn1_length() const
 }
 
 #ifdef SNMP_PP_NAMESPACE
-}; // end of namespace Snmp_pp
+} // end of namespace Snmp_pp
 #endif 

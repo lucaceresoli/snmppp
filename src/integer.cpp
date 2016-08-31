@@ -2,9 +2,9 @@
   _## 
   _##  integer.cpp  
   _##
-  _##  SNMP++v3.2.25
+  _##  SNMP++ v3.3
   _##  -----------------------------------------------
-  _##  Copyright (c) 2001-2010 Jochen Katz, Frank Fock
+  _##  Copyright (c) 2001-2013 Jochen Katz, Frank Fock
   _##
   _##  This software is based on SNMP++2.6 from Hewlett Packard:
   _##  
@@ -22,8 +22,6 @@
   _##  "AS-IS" without warranty of any kind, either express or implied. User 
   _##  hereby grants a royalty-free license to any and all derivatives based
   _##  upon this software code base. 
-  _##  
-  _##  Stuttgart, Germany, Thu Sep  2 00:07:47 CEST 2010 
   _##  
   _##########################################################################*/
 /*===================================================================
@@ -51,15 +49,17 @@
   DESCRIPTION:
   Class implemtation for SMI Integer classes.
 =====================================================================*/
-char integer_cpp_version[]="#(@) SNMP++ $Id: integer.cpp 1542 2009-05-29 11:38:48Z katz $";
+char integer_cpp_version[]="#(@) SNMP++ $Id: integer.cpp 2361 2013-05-09 22:15:06Z katz $";
 
-#include <stdio.h>             // for sprintf()
+#include <libsnmp.h>
+
 #include "snmp_pp/integer.h"   // header file for gauge class
 
 #ifdef SNMP_PP_NAMESPACE
 namespace Snmp_pp {
 #endif
 
+#if 0
 // constructor no value
 SnmpUInt32::SnmpUInt32() : valid_flag(true), m_changed(true)
 {
@@ -90,6 +90,7 @@ SnmpUInt32& SnmpUInt32::operator=(const unsigned long i)
   m_changed = true;
   return *this;
 }
+#endif
 
 // general assignment from any Value
 SnmpSyntax& SnmpUInt32::operator=(const SnmpSyntax &in_val)
@@ -110,12 +111,16 @@ SnmpSyntax& SnmpUInt32::operator=(const SnmpSyntax &in_val)
 	      ((SnmpUInt32 &)in_val).smival.value.uNumber;
   	  valid_flag = true;
 	  break;
+      // XXX default: throw std::bad_cast();
     }
   }
+  else
+    smival.value.uNumber = 0;
   m_changed = true;
   return *this;
 }
 
+#if 0
 // overloaded assignment
 SnmpUInt32& SnmpUInt32::operator=(const SnmpUInt32 &uli)
 {
@@ -126,6 +131,7 @@ SnmpUInt32& SnmpUInt32::operator=(const SnmpUInt32 &uli)
   m_changed = true;
   return *this;
 }
+#endif
 
 // ASCII format return
 const char *SnmpUInt32::get_printable() const
@@ -133,7 +139,10 @@ const char *SnmpUInt32::get_printable() const
   if (m_changed == false) return output_buffer;
 
   SnmpUInt32 *nc_this = PP_CONST_CAST(SnmpUInt32*, this);
-  sprintf(nc_this->output_buffer, "%lu", smival.value.uNumber);
+  if (valid_flag)
+    sprintf(nc_this->output_buffer, "%lu", smival.value.uNumber);
+  else
+    nc_this->output_buffer[0] = 0;
 
   nc_this->m_changed = false;
 
@@ -158,6 +167,7 @@ int SnmpUInt32::get_asn1_length() const
 //  INT 32 Implementation
 //====================================================================
 
+#if 0
 // constructor no value
 SnmpInt32::SnmpInt32() : valid_flag(true), m_changed(true)
 {
@@ -198,6 +208,7 @@ SnmpInt32& SnmpInt32::operator=(const SnmpInt32 &uli)
   m_changed = true;
   return *this;
 }
+#endif
 
 // general assignment from any Value
 SnmpSyntax& SnmpInt32::operator=(const SnmpSyntax &in_val)
@@ -220,6 +231,8 @@ SnmpSyntax& SnmpInt32::operator=(const SnmpSyntax &in_val)
 	  break;
     }
   }
+  else
+    smival.value.sNumber = 0;
   m_changed = true;
   return *this;
 }
@@ -230,7 +243,10 @@ const char *SnmpInt32::get_printable() const
   if (m_changed == false) return output_buffer;
 
   SnmpInt32 *nc_this = PP_CONST_CAST(SnmpInt32*, this);
-  sprintf(nc_this->output_buffer, "%ld", (long)smival.value.sNumber);
+  if (valid_flag)
+    sprintf(nc_this->output_buffer, "%ld", (long)smival.value.sNumber);
+  else
+    nc_this->output_buffer[0] = 0;
 
   nc_this->m_changed = false;
 
@@ -253,5 +269,5 @@ int SnmpInt32::get_asn1_length() const
 }
 
 #ifdef SNMP_PP_NAMESPACE
-}; // end of namespace Snmp_pp
+} // end of namespace Snmp_pp
 #endif 

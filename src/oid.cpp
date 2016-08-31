@@ -2,9 +2,9 @@
   _## 
   _##  oid.cpp  
   _##
-  _##  SNMP++v3.2.25
+  _##  SNMP++ v3.3
   _##  -----------------------------------------------
-  _##  Copyright (c) 2001-2010 Jochen Katz, Frank Fock
+  _##  Copyright (c) 2001-2013 Jochen Katz, Frank Fock
   _##
   _##  This software is based on SNMP++2.6 from Hewlett Packard:
   _##  
@@ -22,8 +22,6 @@
   _##  "AS-IS" without warranty of any kind, either express or implied. User 
   _##  hereby grants a royalty-free license to any and all derivatives based
   _##  upon this software code base. 
-  _##  
-  _##  Stuttgart, Germany, Thu Sep  2 00:07:47 CEST 2010 
   _##  
   _##########################################################################*/
 /*===================================================================
@@ -53,17 +51,9 @@
   includes all protected and public member functions. The oid class
   may be compiled stand alone without the use of any other library.
 =====================================================================*/
-char oid_cpp_version[]="#(@) SNMP++ $Id: oid.cpp 1742 2010-04-29 19:08:54Z katz $";
+char oid_cpp_version[]="#(@) SNMP++ $Id: oid.cpp 2361 2013-05-09 22:15:06Z katz $";
 
-//---------[ external C libaries used ]--------------------------------
-#include <stdio.h>                // standard io
-#if !(defined (CPU) && CPU == PPC603)
-#include <memory.h>               // memcpy's
-#endif
-#include <string.h>               // strlen, etc..
-#include <stdlib.h>               // standard library
-#include <ctype.h>                // isdigit
-#include <stdlib.h>               // malloc, free
+#include <libsnmp.h>
 
 #include "snmp_pp/oid.h"                  // include def for oid class
 
@@ -75,12 +65,14 @@ namespace Snmp_pp {
 #define  SNMPCHARSIZE 11          // an individual oid instance as a string
 
 /* Borlands isdigit has a bug */
-#ifdef __BCPLUSPLUS__
+/* XXX with a neat test this could be handled universal in configure and libsnmp.h */
+#if defined(__BCPLUSPLUS__) || !defined(HAVE_ISDIGIT)
 #define my_isdigit(c) ((c) >= '0' && (c) <= '9')
 #else
 #define my_isdigit isdigit
 #endif
 
+#if 0
 //=============[Oid::Oid(void)]============================================
 // constructor using no arguments
 // initialize octet ptr and string
@@ -91,7 +83,7 @@ Oid::Oid() : iv_str(0), iv_part_str(0), m_changed(true)
   smival.value.oid.len = 0;
   smival.value.oid.ptr = 0;
 }
-
+#endif
 
 //=============[Oid::Oid(const char *dotted_string ]=====================
 // constructor using a dotted string
@@ -110,7 +102,7 @@ Oid::Oid(const char *oid_string, const bool is_dotted_oid_string)
     set_data(oid_string, oid_string ? strlen(oid_string) : 0);
 }
 
-
+#if 0
 //=============[Oid::Oid(const Oid &oid) ]================================
 // constructor using another oid object
 //
@@ -163,7 +155,7 @@ Oid::~Oid()
   if (iv_str)      delete [] iv_str;        // free up the output string
   if (iv_part_str) delete [] iv_part_str;   // free up the output string
 }
-
+#endif
 
 //=============[Oid::operator = const char * dotted_string ]==============
 // assignment to a string operator overloaded
@@ -180,7 +172,7 @@ Oid& Oid::operator=(const char *dotted_oid_string)
   return *this;
 }
 
-
+#if 0
 //=============[Oid:: operator = const Oid &oid ]==========================
 // assignment to another oid object overloaded
 //
@@ -202,7 +194,7 @@ Oid& Oid::operator=(const Oid &oid)
     OidCopy((SmiLPOID)&(oid.smival.value.oid), (SmiLPOID)&smival.value.oid);
   return *this;
 }
-
+#endif
 
 //==============[Oid:: operator += const char *a ]=========================
 // append operator, appends a string
@@ -226,11 +218,11 @@ Oid& Oid::operator+=(const char *a)
   char *ptr = new char[n];
   if (ptr)
   {
-    /// @todo optimze this function (avoid conversion to string)
+    /// @todo optimize this function (avoid conversion to string)
     OidToStr(&smival.value.oid, n, ptr);
     if (ptr[0])
-      STRCAT(ptr,".");
-    STRCAT(ptr,a);
+      strcat(ptr,".");
+    strcat(ptr,a);
 
     delete_oid_ptr();
 
@@ -240,9 +232,10 @@ Oid& Oid::operator+=(const char *a)
   return *this;
 }
 
+#if 0
 //=============[ int operator == oid,oid ]=================================
 // equivlence operator overloaded
-int operator==(const Oid &lhs, const Oid &rhs)
+bool operator==(const Oid &lhs, const Oid &rhs)
 {
   // ensure same len, then use nCompare
   if (rhs.len() != lhs.len()) return 0;
@@ -251,7 +244,7 @@ int operator==(const Oid &lhs, const Oid &rhs)
 
 //==============[ operator<(Oid &x,Oid &y) ]=============================
 // less than < overloaded
-int operator<(const Oid &lhs, const Oid &rhs)
+bool operator<(const Oid &lhs, const Oid &rhs)
 {
   int result;
   // call nCompare with the current
@@ -265,7 +258,7 @@ int operator<(const Oid &lhs, const Oid &rhs)
 
 //==============[ operator==(Oid &x,char *) ]=============================
 // equivlence operator overloaded
-int operator==(const Oid &x, const char *dotted_oid_string)
+bool operator==(const Oid &x, const char *dotted_oid_string)
 {
   Oid to(dotted_oid_string);   // create a temp oid object
   return (x == to);   // compare using existing operator
@@ -273,7 +266,7 @@ int operator==(const Oid &x, const char *dotted_oid_string)
 
 //==============[ operator!=(Oid &x,char*) ]=============================
 // not equivlence operator overloaded
-int operator!=(const Oid &x, const char *dotted_oid_string)
+bool operator!=(const Oid &x, const char *dotted_oid_string)
 {
   Oid to(dotted_oid_string);  // create a temp oid object
   return (x != to);  // compare using existing operator
@@ -281,7 +274,7 @@ int operator!=(const Oid &x, const char *dotted_oid_string)
 
 //==============[ operator<(Oid &x,char*) ]=============================
 // less than < operator overloaded
-int operator<(const Oid &x, const char *dotted_oid_string)
+bool operator<(const Oid &x, const char *dotted_oid_string)
 {
   Oid to(dotted_oid_string);  // create a temp oid object
   return (x < to);  // compare using existing operator
@@ -289,7 +282,7 @@ int operator<(const Oid &x, const char *dotted_oid_string)
 
 //==============[ operator<=(Oid &x,char *) ]=============================
 // less than <= operator overloaded
-int operator<=(const Oid &x,char *dotted_oid_string)
+bool operator<=(const Oid &x,char *dotted_oid_string)
 {
   Oid to(dotted_oid_string);  // create a temp oid object
   return (x <= to);  // compare using existing operator
@@ -297,7 +290,7 @@ int operator<=(const Oid &x,char *dotted_oid_string)
 
 //==============[ operator>(Oid &x,char* ]=============================
 // greater than > operator overloaded
-int operator>(const Oid &x,const char *dotted_oid_string)
+bool operator>(const Oid &x,const char *dotted_oid_string)
 {
   Oid to(dotted_oid_string);  // create a temp oid object
   return (x > to);   // compare using existing operator
@@ -305,11 +298,12 @@ int operator>(const Oid &x,const char *dotted_oid_string)
 
 //==============[ operator>=(Oid &x,char*) ]=============================
 // greater than >= operator overloaded
-int operator>=(const Oid &x,const char *dotted_oid_string)
+bool operator>=(const Oid &x,const char *dotted_oid_string)
 {
   Oid to(dotted_oid_string);  // create a temp oid object
   return (x >= to);   // compare using existing operator
 }
+#endif
 
 //===============[Oid::set_data ]==---=====================================
 // copy data from raw form...
@@ -323,7 +317,7 @@ void Oid::set_data(const unsigned long *raw_oid,
     smival.value.oid.ptr = (SmiLPUINT32) new unsigned long[oid_len];
     if (!smival.value.oid.ptr) return;
   }
-  MEMCPY((SmiLPBYTE) smival.value.oid.ptr,
+  memcpy((SmiLPBYTE) smival.value.oid.ptr,
          (SmiLPBYTE) raw_oid,
          (size_t) (oid_len*sizeof(SmiUINT32)));
   smival.value.oid.len = oid_len;
@@ -351,6 +345,7 @@ void Oid::set_data(const char *str, const unsigned int str_len)
   m_changed = true;
 }
 
+#if 0
 //===============[Oid::trim(unsigned int) ]============================
 // trim off the n leftmost values of an oid
 // Note!, does not adjust actual space for
@@ -402,7 +397,7 @@ Oid& Oid::operator+=(const Oid &o)
 
   if (smival.value.oid.ptr)
   {
-    MEMCPY((SmiLPBYTE) new_oid,
+    memcpy((SmiLPBYTE) new_oid,
            (SmiLPBYTE) smival.value.oid.ptr,
            (size_t) (smival.value.oid.len*sizeof(SmiUINT32)));
 
@@ -412,7 +407,7 @@ Oid& Oid::operator+=(const Oid &o)
   // out with the old, in with the new...
   smival.value.oid.ptr = new_oid;
 
-  MEMCPY((SmiLPBYTE) &new_oid[smival.value.oid.len],
+  memcpy((SmiLPBYTE) &new_oid[smival.value.oid.len],
          (SmiLPBYTE) o.smival.value.oid.ptr,
          (size_t) (o.smival.value.oid.len*sizeof(SmiUINT32)));
 
@@ -421,6 +416,7 @@ Oid& Oid::operator+=(const Oid &o)
   m_changed = true;
   return *this;
 }
+#endif
 
 //==============[Oid::get_printable(unsigned int start, n) ]=============
 // return a dotted string starting at start,
@@ -574,7 +570,7 @@ int Oid::StrToOid(const char *str, SmiLPOID dstOid) const
   }
 
   // copy in the temp data
-  MEMCPY((SmiLPBYTE) dstOid->ptr,
+  memcpy((SmiLPBYTE) dstOid->ptr,
          (SmiLPBYTE) temp,
          (size_t) (index*sizeof(SmiUINT32)));
 
@@ -588,6 +584,7 @@ int Oid::StrToOid(const char *str, SmiLPOID dstOid) const
 }
 
 
+#if 0
 //===============[Oid::OidCopy(source, destination) ]====================
 // Copy an oid
 int Oid::OidCopy(SmiLPOID srcOid, SmiLPOID dstOid) const
@@ -596,7 +593,7 @@ int Oid::OidCopy(SmiLPOID srcOid, SmiLPOID dstOid) const
   if (srcOid->len == 0) return -1;
 
   // copy source to destination
-  MEMCPY((SmiLPBYTE) dstOid->ptr,
+  memcpy((SmiLPBYTE) dstOid->ptr,
          (SmiLPBYTE) srcOid->ptr,
          (size_t) (srcOid->len*sizeof(SmiUINT32)));
 
@@ -604,7 +601,6 @@ int Oid::OidCopy(SmiLPOID srcOid, SmiLPOID dstOid) const
   dstOid->len = srcOid->len;
   return (int) srcOid->len;
 }
-
 
 //===============[Oid::nCompare(n, Oid) ]=================================
 // compare the n leftmost values of two oids (left-to_right )
@@ -654,6 +650,7 @@ int Oid::nCompare(const unsigned long n,
   }
   return 0;                                 // equal
 }
+#endif
 
 //================[Oid::OidToStr ]=========================================
 // convert an oid to a string
@@ -686,7 +683,7 @@ int Oid::OidToStr(const SmiOID *srcOid,
       str[totLen++] = '.';
 
     // copy the string token into the main string
-    STRCPY(str + totLen, szNumber);
+    strcpy(str + totLen, szNumber);
 
     // adjust the total len
     totLen += cur_len;
@@ -744,5 +741,5 @@ int Oid::get_asn1_length() const
 }
 
 #ifdef SNMP_PP_NAMESPACE
-}; // end of namespace Snmp_pp
+} // end of namespace Snmp_pp
 #endif 

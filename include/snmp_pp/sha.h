@@ -2,9 +2,9 @@
   _## 
   _##  sha.h  
   _##
-  _##  SNMP++v3.2.25
+  _##  SNMP++ v3.3
   _##  -----------------------------------------------
-  _##  Copyright (c) 2001-2010 Jochen Katz, Frank Fock
+  _##  Copyright (c) 2001-2013 Jochen Katz, Frank Fock
   _##
   _##  This software is based on SNMP++2.6 from Hewlett Packard:
   _##  
@@ -23,15 +23,13 @@
   _##  hereby grants a royalty-free license to any and all derivatives based
   _##  upon this software code base. 
   _##  
-  _##  Stuttgart, Germany, Thu Sep  2 00:07:47 CEST 2010 
-  _##  
   _##########################################################################*/
 
 #include "snmp_pp/config_snmp_pp.h"
 
 #if !defined(_USE_LIBTOMCRYPT) && !defined(_USE_OPENSSL)
 
-// $Id: sha.h 288 2007-03-22 22:37:09Z katz $
+// $Id: sha.h 2359 2013-05-09 20:07:01Z fock $
 /****************************************************************
  * SHS.h  -  Secure Hash Standard (draft) FIPS 180-1            *
  *                                                              *

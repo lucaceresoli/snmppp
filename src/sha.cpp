@@ -2,9 +2,9 @@
   _## 
   _##  sha.cpp  
   _##
-  _##  SNMP++v3.2.25
+  _##  SNMP++ v3.3
   _##  -----------------------------------------------
-  _##  Copyright (c) 2001-2010 Jochen Katz, Frank Fock
+  _##  Copyright (c) 2001-2013 Jochen Katz, Frank Fock
   _##
   _##  This software is based on SNMP++2.6 from Hewlett Packard:
   _##  
@@ -23,10 +23,10 @@
   _##  hereby grants a royalty-free license to any and all derivatives based
   _##  upon this software code base. 
   _##  
-  _##  Stuttgart, Germany, Thu Sep  2 00:07:47 CEST 2010 
-  _##  
   _##########################################################################*/
-char sha_cpp_version[]="#(@) SNMP++ $Id: sha.cpp 1549 2009-06-26 19:42:55Z katz $";
+char sha_cpp_version[]="#(@) SNMP++ $Id: sha.cpp 2361 2013-05-09 22:15:06Z katz $";
+
+#include <libsnmp.h>
 
 #include "snmp_pp/sha.h"
 
@@ -43,13 +43,6 @@ char sha_cpp_version[]="#(@) SNMP++ $Id: sha.cpp 1549 2009-06-26 19:42:55Z katz 
  * both harmless in case of ANY problem you may have with this   *
  * code.                                                         *
  *****************************************************************/
-
-#if !(defined (CPU) && CPU == PPC603)
-#include <memory.h>
-#else
-#include <string.h>
-#endif
-#include <stdio.h>
 
 #ifdef SNMP_PP_NAMESPACE
 namespace Snmp_pp {
@@ -281,7 +274,7 @@ void SHAFinal(unsigned char *digest, SHA_CTX *ctx)
 }
 
 #ifdef SNMP_PP_NAMESPACE
-}; // end of namespace Snmp_pp
+} // end of namespace Snmp_pp
 #endif 
 
 #endif // !defined(_USE_LIBTOMCRYPT) && !defined(_USE_OPENSSL)

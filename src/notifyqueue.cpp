@@ -2,9 +2,9 @@
   _## 
   _##  notifyqueue.cpp  
   _##
-  _##  SNMP++v3.2.25
+  _##  SNMP++ v3.3
   _##  -----------------------------------------------
-  _##  Copyright (c) 2001-2010 Jochen Katz, Frank Fock
+  _##  Copyright (c) 2001-2013 Jochen Katz, Frank Fock
   _##
   _##  This software is based on SNMP++2.6 from Hewlett Packard:
   _##  
@@ -22,8 +22,6 @@
   _##  "AS-IS" without warranty of any kind, either express or implied. User 
   _##  hereby grants a royalty-free license to any and all derivatives based
   _##  upon this software code base. 
-  _##  
-  _##  Stuttgart, Germany, Thu Sep  2 00:07:47 CEST 2010 
   _##  
   _##########################################################################*/
 /*===================================================================
@@ -59,21 +57,13 @@
         timeouts
 
 =====================================================================*/
-char notifyqueue_version[]="#(@) SNMP++ $Id: notifyqueue.cpp 1826 2010-08-29 20:19:59Z katz $";
+char notifyqueue_version[]="#(@) SNMP++ $Id: notifyqueue.cpp 2361 2013-05-09 22:15:06Z katz $";
+
+#include <libsnmp.h>
 
 //-----[ includes ]----------------------------------------------------
-#include <errno.h>
-
 #if defined (CPU) && CPU == PPC603
-#include <sockLib.h> 
-#endif
-
-#if defined(__APPLE__)
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <unistd.h>
+#include <sockLib.h>
 #endif
 
 //----[ snmp++ includes ]----------------------------------------------
@@ -91,19 +81,14 @@ char notifyqueue_version[]="#(@) SNMP++ $Id: notifyqueue.cpp 1826 2010-08-29 20:
 namespace Snmp_pp {
 #endif
 
+static const char *loggerModuleName = "snmp++.notifyqueue";
+
 //--------[ externs ]---------------------------------------------------
 extern int receive_snmp_notification(SnmpSocket sock, Snmp &snmp_session,
                                      Pdu &pdu, SnmpTarget **target);
 
-//-----[ macros ]------------------------------------------------------
-// should be in snmp.h...
-#define SNMP_PORT 161	      // standard port # for SNMP
-#define SNMP_TRAP_PORT 162    // standard port # for SNMP traps
-
 #ifdef WIN32
 #define close closesocket
-#elif defined(_AIX)
-#include <unistd.h>
 #endif
 
 //----[ CNotifyEvent class ]------------------------------------------------
@@ -127,15 +112,17 @@ CNotifyEvent::~CNotifyEvent()
 
 int CNotifyEvent::notify_filter(const Oid &trapid, SnmpTarget &target) const
 {
-  int target_count, has_target = FALSE, target_matches = FALSE;
-  int trapid_count, has_trapid = FALSE, trapid_matches = FALSE;
+  bool has_target = false, target_matches = false;
+  bool has_trapid = false, trapid_matches = false;
+  int target_count;
+  int trapid_count;
   GenAddress targetaddr, tmpaddr;
 
   // figure out how many targets, handle empty case as all targets
   if ((notify_targets) && ((target_count = notify_targets->size())))
   {
     SnmpTarget *tmptarget = 0;
-    has_target = TRUE;
+    has_target = true;
 
     target.get_address(targetaddr);
 
@@ -146,27 +133,27 @@ int CNotifyEvent::notify_filter(const Oid &trapid, SnmpTarget &target) const
 
       for ( int x = 0; x < target_count; x++)       // for all targets
       {
-	if (notify_targets->get_element(tmptarget, x))
-	  continue;
+        if (notify_targets->get_element(tmptarget, x))
+          continue;
 
-	tmptarget->get_address(tmpaddr);
-	if ((tmpaddr.valid())) {
+        tmptarget->get_address(tmpaddr);
+        if ((tmpaddr.valid())) {
           int addr_equal = 0;
 
           /* check for types of Address */
           if ((tmpaddr.get_type() == Address::type_ip) &&
               (targetaddr.get_type() == Address::type_udp))
-          {
-            /* special case that works for UdpAddress == IpAddress */
-            IpAddress ip1(targetaddr);
-            IpAddress ip2(tmpaddr);
+            {
+              /* special case that works for UdpAddress == IpAddress */
+              IpAddress ip1(targetaddr);
+              IpAddress ip2(tmpaddr);
 
-            addr_equal = (ip1.valid() && ip2.valid() && (ip1 == ip2));
-          }
+              addr_equal = (ip1.valid() && ip2.valid() && (ip1 == ip2));
+            }
           else
-          {
-            addr_equal = (targetaddr == tmpaddr);
-          }
+            {
+              addr_equal = (targetaddr == tmpaddr);
+            }
 
           if (addr_equal) {
             tmptarget_type = tmptarget->get_type();
@@ -178,7 +165,7 @@ int CNotifyEvent::notify_filter(const Oid &trapid, SnmpTarget &target) const
                      ((UTarget*)tmptarget)->get_security_name()) &&
                     (((UTarget*)(&target))->get_security_model() ==
                      ((UTarget*)tmptarget)->get_security_model())) {
-		  target_matches = TRUE;
+                  target_matches = true;
                   break;
                 }
               }
@@ -189,7 +176,7 @@ int CNotifyEvent::notify_filter(const Oid &trapid, SnmpTarget &target) const
                       (((UTarget*)(&target))->get_security_name() ==
                        OctetStr(((CTarget*)tmptarget)->
                                 get_readcommunity()))) {
-                    target_matches = TRUE;
+                    target_matches = true;
                     break;
                   }
             }
@@ -200,7 +187,7 @@ int CNotifyEvent::notify_filter(const Oid &trapid, SnmpTarget &target) const
                   // both are CTarget
                   if (!strcmp(((CTarget*)(&target))->get_readcommunity(),
                               ((CTarget*)tmptarget)->get_readcommunity())) {
-                    target_matches = TRUE;
+                    target_matches = true;
                     break;
                   }
                 }
@@ -209,7 +196,7 @@ int CNotifyEvent::notify_filter(const Oid &trapid, SnmpTarget &target) const
                     if ((tmptarget->get_version() == target.get_version()) &&
                         (OctetStr(((CTarget*)(&target))->get_readcommunity()) ==
                          ((UTarget*)tmptarget)->get_security_name())) {
-                      target_matches = TRUE;
+                      target_matches = true;
                       break;
                     }
                   }
@@ -225,15 +212,15 @@ int CNotifyEvent::notify_filter(const Oid &trapid, SnmpTarget &target) const
   // figure out how many trapids, handle empty case as all trapids
   if ((notify_ids) && ((trapid_count = notify_ids->size()))) {
     Oid tmpoid;
-    has_trapid = TRUE;
+    has_trapid = true;
     // loop through all trapids in the collection
     for (int y=0; y < trapid_count; y++)       // for all trapids
-    {
+      {
       if (notify_ids->get_element(tmpoid, y))
-	continue;
+        continue;
       if (trapid == tmpoid) {
-	trapid_matches = TRUE;
-	break;
+        trapid_matches = true;
+        break;
       }
     }
   }
@@ -241,8 +228,8 @@ int CNotifyEvent::notify_filter(const Oid &trapid, SnmpTarget &target) const
 
   // Make the callback if the trap passed the filters
   if ((has_target && !target_matches) || (has_trapid && !trapid_matches))
-    return FALSE;
-  return TRUE;
+    return false;
+  return true;
 }
 
 
@@ -250,6 +237,7 @@ int CNotifyEvent::Callback(SnmpTarget &target, Pdu &pdu, SnmpSocket fd, int stat
 {
   Oid trapid;
   pdu.get_notify_id(trapid);
+  (void)fd;
 
   // Make the callback if the trap passed the filters
   if ((m_snmp) && (notify_filter(trapid, target)))
@@ -264,11 +252,11 @@ int CNotifyEvent::Callback(SnmpTarget &target, Pdu &pdu, SnmpSocket fd, int stat
     //------[ call into the callback function ]-------------------------
     if (m_snmp->get_notify_callback())
       (m_snmp->get_notify_callback())(
-	  reason,
-	  m_snmp,			// snmp++ session who owns the req
-	  pdu,			// trap pdu
-	  target,			// target
-	  m_snmp->get_notify_callback_data()); // callback data
+          reason,
+          m_snmp,                        // snmp++ session who owns the req
+          pdu,                        // trap pdu
+          target,                        // target
+          m_snmp->get_notify_callback_data()); // callback data
   }
   return SNMP_CLASS_SUCCESS;
 }
@@ -278,8 +266,8 @@ int CNotifyEvent::Callback(SnmpTarget &target, Pdu &pdu, SnmpSocket fd, int stat
 
 CNotifyEventQueue::CNotifyEventQueueElt::CNotifyEventQueueElt(
                                            CNotifyEvent *notifyevent,
-					   CNotifyEventQueueElt *next,
-					   CNotifyEventQueueElt *previous)
+                                           CNotifyEventQueueElt *next,
+                                           CNotifyEventQueueElt *previous)
   : m_notifyevent(notifyevent), m_Next(next), m_previous(previous)
 {
   /* Finish insertion into doubly linked list */
@@ -306,7 +294,7 @@ CNotifyEvent *CNotifyEventQueue::CNotifyEventQueueElt::TestId(Snmp *snmp)
 //----[ CNotifyEventQueue class ]--------------------------------------
 CNotifyEventQueue::CNotifyEventQueue(EventListHolder *holder, Snmp *session)
   : m_head(NULL,NULL,NULL), m_msgCount(0), m_notify_fd(INVALID_SOCKET),
-    m_listen_port(SNMP_TRAP_PORT),
+    m_listen_port(SNMP_PP_DEFAULT_SNMP_TRAP_PORT),
     my_holder(holder), m_snmpSession(session)
 {
 //TM: could do the trap registration setup here but seems better to
@@ -331,8 +319,8 @@ SnmpSocket CNotifyEventQueue::get_notify_fd() const
 }
 
 int CNotifyEventQueue::AddEntry(Snmp *snmp,
-				const OidCollection &trapids,
-				const TargetCollection &targets)
+                                const OidCollection &trapids,
+                                const TargetCollection &targets)
 {
   SnmpSynchronize _synchronize(*this); // instead of REENTRANT()
 
@@ -360,23 +348,23 @@ int CNotifyEventQueue::AddEntry(Snmp *snmp,
       if ((m_notify_fd = socket(AF_INET, SOCK_DGRAM,0)) < 0)
       {
 #ifdef WIN32
-	int werr = WSAGetLastError();
-	if (EMFILE == werr ||WSAENOBUFS == werr || ENFILE == werr)
-	  status = SNMP_CLASS_RESOURCE_UNAVAIL;
-	else if (WSAEHOSTDOWN == werr)
-	  status = SNMP_CLASS_TL_FAILED;
-	else
-	  status = SNMP_CLASS_TL_UNSUPPORTED;
+        int werr = WSAGetLastError();
+        if (EMFILE == werr ||WSAENOBUFS == werr || ENFILE == werr)
+          status = SNMP_CLASS_RESOURCE_UNAVAIL;
+        else if (WSAEHOSTDOWN == werr)
+          status = SNMP_CLASS_TL_FAILED;
+        else
+          status = SNMP_CLASS_TL_UNSUPPORTED;
 #else
-	if (EMFILE == errno || ENOBUFS == errno || ENFILE == errno)
-	  status = SNMP_CLASS_RESOURCE_UNAVAIL;
-	else if (EHOSTDOWN == errno)
-	  status = SNMP_CLASS_TL_FAILED;
-	else
-	  status = SNMP_CLASS_TL_UNSUPPORTED;
+        if (EMFILE == errno || ENOBUFS == errno || ENFILE == errno)
+          status = SNMP_CLASS_RESOURCE_UNAVAIL;
+        else if (EHOSTDOWN == errno)
+          status = SNMP_CLASS_TL_FAILED;
+        else
+          status = SNMP_CLASS_TL_UNSUPPORTED;
 #endif
-	cleanup();
-	return status;
+        cleanup();
+        return status;
       }
 
       // set up the manager socket attributes
@@ -391,48 +379,48 @@ int CNotifyEventQueue::AddEntry(Snmp *snmp,
 
       // bind the socket
       if (bind(m_notify_fd, (struct sockaddr *) &mgr_addr,
-	       sizeof(mgr_addr)) < 0)
+               sizeof(mgr_addr)) < 0)
       {
 #ifdef WIN32
-	int werr = WSAGetLastError();
-	if (WSAEADDRINUSE  == werr)
-	  status = SNMP_CLASS_TL_IN_USE;
-	else if (WSAENOBUFS == werr)
-	  status = SNMP_CLASS_RESOURCE_UNAVAIL;
-	else if (werr == WSAEAFNOSUPPORT)
-	  status = SNMP_CLASS_TL_UNSUPPORTED;
-	else if (werr == WSAENETUNREACH)
-	  status = SNMP_CLASS_TL_FAILED;
-	else if (werr == EACCES)
-	  status = SNMP_CLASS_TL_ACCESS_DENIED;
-	else
-	  status = SNMP_CLASS_INTERNAL_ERROR;
+        int werr = WSAGetLastError();
+        if (WSAEADDRINUSE  == werr)
+          status = SNMP_CLASS_TL_IN_USE;
+        else if (WSAENOBUFS == werr)
+          status = SNMP_CLASS_RESOURCE_UNAVAIL;
+        else if (werr == WSAEAFNOSUPPORT)
+          status = SNMP_CLASS_TL_UNSUPPORTED;
+        else if (werr == WSAENETUNREACH)
+          status = SNMP_CLASS_TL_FAILED;
+        else if (werr == EACCES)
+          status = SNMP_CLASS_TL_ACCESS_DENIED;
+        else
+          status = SNMP_CLASS_INTERNAL_ERROR;
 #else
-	if (EADDRINUSE  == errno)
-	  status = SNMP_CLASS_TL_IN_USE;
-	else if (ENOBUFS == errno)
-	  status = SNMP_CLASS_RESOURCE_UNAVAIL;
-	else if (errno == EAFNOSUPPORT)
-	  status = SNMP_CLASS_TL_UNSUPPORTED;
-	else if (errno == ENETUNREACH)
-	  status = SNMP_CLASS_TL_FAILED;
-	else if (errno == EACCES)
-	  status = SNMP_CLASS_TL_ACCESS_DENIED;
-	else
-	{
-	  debugprintf(0, "Uncatched errno value %d, returning internal error.",
-		      errno);
-	  status = SNMP_CLASS_INTERNAL_ERROR;
-	}
+        if (EADDRINUSE  == errno)
+          status = SNMP_CLASS_TL_IN_USE;
+        else if (ENOBUFS == errno)
+          status = SNMP_CLASS_RESOURCE_UNAVAIL;
+        else if (errno == EAFNOSUPPORT)
+          status = SNMP_CLASS_TL_UNSUPPORTED;
+        else if (errno == ENETUNREACH)
+          status = SNMP_CLASS_TL_FAILED;
+        else if (errno == EACCES)
+          status = SNMP_CLASS_TL_ACCESS_DENIED;
+        else
+        {
+          debugprintf(0, "Uncatched errno value %d, returning internal error.",
+                      errno);
+          status = SNMP_CLASS_INTERNAL_ERROR;
+        }
 #endif
-	debugprintf(0, "Fatal: could not bind to %s",
-		    m_notify_addr.get_printable());
-	cleanup();
-	return status;
+        debugprintf(0, "Fatal: could not bind to %s",
+                    m_notify_addr.get_printable());
+        cleanup();
+        return status;
       }
 
       debugprintf(3, "Bind to %s for notifications, fd %d.",
-		  m_notify_addr.get_printable(), m_notify_fd);
+                  m_notify_addr.get_printable(), m_notify_fd);
     } // is_v4_address
     else
     {
@@ -442,24 +430,42 @@ int CNotifyEventQueue::AddEntry(Snmp *snmp,
       if ((m_notify_fd = socket(AF_INET6, SOCK_DGRAM,0)) < 0)
       {
 #ifdef WIN32
-	int werr = WSAGetLastError();
-	if (EMFILE == werr ||WSAENOBUFS == werr || ENFILE == werr)
-	  status = SNMP_CLASS_RESOURCE_UNAVAIL;
-	else if (WSAEHOSTDOWN == werr)
-	  status = SNMP_CLASS_TL_FAILED;
-	else
-	  status = SNMP_CLASS_TL_UNSUPPORTED;
+        int werr = WSAGetLastError();
+        if (EMFILE == werr ||WSAENOBUFS == werr || ENFILE == werr)
+          status = SNMP_CLASS_RESOURCE_UNAVAIL;
+        else if (WSAEHOSTDOWN == werr)
+          status = SNMP_CLASS_TL_FAILED;
+        else
+          status = SNMP_CLASS_TL_UNSUPPORTED;
 #else
-	if (EMFILE == errno || ENOBUFS == errno || ENFILE == errno)
-	  status = SNMP_CLASS_RESOURCE_UNAVAIL;
-	else if (EHOSTDOWN == errno)
-	  status = SNMP_CLASS_TL_FAILED;
-	else
-	  status = SNMP_CLASS_TL_UNSUPPORTED;
+        if (EMFILE == errno || ENOBUFS == errno || ENFILE == errno)
+          status = SNMP_CLASS_RESOURCE_UNAVAIL;
+        else if (EHOSTDOWN == errno)
+          status = SNMP_CLASS_TL_FAILED;
+        else
+          status = SNMP_CLASS_TL_UNSUPPORTED;
 #endif
-	cleanup();
-	return status;
+        cleanup();
+        return status;
       }
+
+#ifdef NOTIFY_SET_IPV6_V6ONLY
+      int on = 1;
+      if (setsockopt(m_notify_fd, IPPROTO_IPV6, IPV6_V6ONLY,
+		     (char *)&on, sizeof(on)) == -1)
+      {
+        LOG_BEGIN(loggerModuleName, WARNING_LOG | 1);
+        LOG("Could not set option IPV6_V6ONLY on notify socket (errno)");
+        LOG(errno);
+        LOG_END;
+      }
+      else
+      {
+        LOG_BEGIN(loggerModuleName, INFO_LOG | 3);
+        LOG("Have set IPV6_V6ONLY option on notify socket");
+        LOG_END;
+      }
+#endif
 
       // set up the manager socket attributes
       struct sockaddr_in6 mgr_addr;
@@ -471,28 +477,28 @@ int CNotifyEventQueue::AddEntry(Snmp *snmp,
 
       if (m_notify_addr.has_ipv6_scope())
       {
-	scope = m_notify_addr.get_scope();
+        scope = m_notify_addr.get_scope();
 
-	int y = addrstr.len() - 1;
-	while ((y>0) && (addrstr[y] != '%'))
-	{
-	  addrstr.set_len(addrstr.len() - 1);
-	  y--;
-	}
-	if (addrstr[y] == '%')
-	  addrstr.set_len(addrstr.len() - 1);
+        int y = addrstr.len() - 1;
+        while ((y>0) && (addrstr[y] != '%'))
+        {
+          addrstr.set_len(addrstr.len() - 1);
+          y--;
+        }
+        if (addrstr[y] == '%')
+          addrstr.set_len(addrstr.len() - 1);
       }
 
       if (inet_pton(AF_INET6, addrstr.get_printable(),
-		    &mgr_addr.sin6_addr) < 0)
+                    &mgr_addr.sin6_addr) < 0)
       {
-	LOG_BEGIN(ERROR_LOG | 1);
-	LOG("Notify transport: inet_pton returns (errno) (str)");
-	LOG(errno);
-	LOG(strerror(errno));
-	LOG_END;
-	cleanup();
-	return SNMP_CLASS_INVALID_ADDRESS;
+	LOG_BEGIN(loggerModuleName, ERROR_LOG | 1);
+        LOG("Notify transport: inet_pton returns (errno) (str)");
+        LOG(errno);
+        LOG(strerror(errno));
+        LOG_END;
+        cleanup();
+        return SNMP_CLASS_INVALID_ADDRESS;
       }
 
       mgr_addr.sin6_family = AF_INET6;
@@ -501,48 +507,47 @@ int CNotifyEventQueue::AddEntry(Snmp *snmp,
 
       // bind the socket
       if (bind(m_notify_fd, (struct sockaddr *) &mgr_addr,
-	       sizeof(mgr_addr)) < 0)
+               sizeof(mgr_addr)) < 0)
       {
 #ifdef WIN32
-	int werr = WSAGetLastError();
-	if (WSAEADDRINUSE  == werr)
-	  status = SNMP_CLASS_TL_IN_USE;
-	else if (WSAENOBUFS == werr)
-	  status = SNMP_CLASS_RESOURCE_UNAVAIL;
-	else if (werr == WSAEAFNOSUPPORT)
-	  status = SNMP_CLASS_TL_UNSUPPORTED;
-	else if (werr == WSAENETUNREACH)
-	  status = SNMP_CLASS_TL_FAILED;
-	else if (werr == EACCES)
-	  status = SNMP_CLASS_TL_ACCESS_DENIED;
-	else
-	  status = SNMP_CLASS_INTERNAL_ERROR;
+        int werr = WSAGetLastError();
+        if (WSAEADDRINUSE  == werr)
+          status = SNMP_CLASS_TL_IN_USE;
+        else if (WSAENOBUFS == werr)
+          status = SNMP_CLASS_RESOURCE_UNAVAIL;
+        else if (werr == WSAEAFNOSUPPORT)
+          status = SNMP_CLASS_TL_UNSUPPORTED;
+        else if (werr == WSAENETUNREACH)
+          status = SNMP_CLASS_TL_FAILED;
+        else if (werr == EACCES)
+          status = SNMP_CLASS_TL_ACCESS_DENIED;
+        else
+          status = SNMP_CLASS_INTERNAL_ERROR;
 #else
-	if (EADDRINUSE  == errno)
-	  status = SNMP_CLASS_TL_IN_USE;
-	else if (ENOBUFS == errno)
-	  status = SNMP_CLASS_RESOURCE_UNAVAIL;
-	else if (errno == EAFNOSUPPORT)
-	  status = SNMP_CLASS_TL_UNSUPPORTED;
-	else if (errno == ENETUNREACH)
-	  status = SNMP_CLASS_TL_FAILED;
-	else if (errno == EACCES)
-	  status = SNMP_CLASS_TL_ACCESS_DENIED;
-	else
-	{
-	  debugprintf(0, "Uncatched errno value %d, returning internal error.",
-		      errno);
-	  status = SNMP_CLASS_INTERNAL_ERROR;
-	  return status;
-	}
+        if (EADDRINUSE  == errno)
+          status = SNMP_CLASS_TL_IN_USE;
+        else if (ENOBUFS == errno)
+          status = SNMP_CLASS_RESOURCE_UNAVAIL;
+        else if (errno == EAFNOSUPPORT)
+          status = SNMP_CLASS_TL_UNSUPPORTED;
+        else if (errno == ENETUNREACH)
+          status = SNMP_CLASS_TL_FAILED;
+        else if (errno == EACCES)
+          status = SNMP_CLASS_TL_ACCESS_DENIED;
+        else
+        {
+          debugprintf(0, "Uncatched errno value %d, returning internal error.",
+                      errno);
+          status = SNMP_CLASS_INTERNAL_ERROR;
+        }
 #endif
-	debugprintf(0, "Fatal: could not bind to %s",
-		    m_notify_addr.get_printable());
-	cleanup();
-	return status;
+        debugprintf(0, "Fatal: could not bind to %s",
+                    m_notify_addr.get_printable());
+        cleanup();
+        return status;
       }
       debugprintf(3, "Bind to %s for notifications, fd %d.",
-		  m_notify_addr.get_printable(), m_notify_fd);
+                  m_notify_addr.get_printable(), m_notify_fd);
 #else
       debugprintf(0, "User error: Enable IPv6 and recompile snmp++.");
       cleanup();
@@ -605,7 +610,7 @@ void CNotifyEventQueue::DeleteEntry(Snmp *snmp)
     if (m_notify_fd != INVALID_SOCKET)
     {
       debugprintf(3, "Closing notifications port %s, fd %d.",
-		  m_notify_addr.get_printable(), m_notify_fd);
+                  m_notify_addr.get_printable(), m_notify_fd);
       close(m_notify_fd);
       m_notify_fd = INVALID_SOCKET;
     }
@@ -624,7 +629,7 @@ int CNotifyEventQueue::GetFdCount()
 }
 
 bool CNotifyEventQueue::GetFdArray(struct pollfd *readfds,
-				   int &remaining)
+                                   int &remaining)
 {
   SnmpSynchronize _synchronize(*this); // instead of REENTRANT()
 
@@ -640,7 +645,7 @@ bool CNotifyEventQueue::GetFdArray(struct pollfd *readfds,
 }
 
 int CNotifyEventQueue::HandleEvents(const struct pollfd *readfds,
-				    const int fds)
+                                    const int fds)
 {
   SnmpSynchronize _synchronize(*this); // instead of REENTRANT()
 
@@ -661,10 +666,10 @@ int CNotifyEventQueue::HandleEvents(const struct pollfd *readfds,
       continue; // not our socket
 
     status = receive_snmp_notification(m_notify_fd, *m_snmpSession,
-				       pdu, &target);
+                                       pdu, &target);
 
     if ((SNMP_CLASS_SUCCESS == status) ||
-	(SNMP_CLASS_TL_FAILED == status))
+        (SNMP_CLASS_TL_FAILED == status))
     {
       // If we have transport layer failure, the app will want to
       // know about it.
@@ -675,9 +680,9 @@ int CNotifyEventQueue::HandleEvents(const struct pollfd *readfds,
       CNotifyEventQueueElt *notifyEltPtr = m_head.GetNext();
       while (notifyEltPtr)
       {
-	notifyEltPtr->GetNotifyEvent()->Callback(*target, pdu,
-						 m_notify_fd, status);
-	notifyEltPtr = notifyEltPtr->GetNext();
+        notifyEltPtr->GetNotifyEvent()->Callback(*target, pdu,
+                                                 m_notify_fd, status);
+        notifyEltPtr = notifyEltPtr->GetNext();
       } // for each snmp object
     }
     if (target) // receive_snmp_notification calls new
@@ -720,10 +725,10 @@ int CNotifyEventQueue::HandleEvents(const int /*maxfds*/,
   // pull the notifiaction off the socket
   if (FD_ISSET(m_notify_fd, (fd_set*)&readfds)) {
     status = receive_snmp_notification(m_notify_fd, *m_snmpSession,
-				       pdu, &target);
+                                       pdu, &target);
 
     if ((SNMP_CLASS_SUCCESS == status) ||
-	(SNMP_CLASS_TL_FAILED == status))
+        (SNMP_CLASS_TL_FAILED == status))
     {
       // If we have transport layer failure, the app will want to
       // know about it.
@@ -732,14 +737,14 @@ int CNotifyEventQueue::HandleEvents(const int /*maxfds*/,
 
       // On failure target will be NULL
       if (!target)
-	target = new SnmpTarget();
+        target = new SnmpTarget();
 
       CNotifyEventQueueElt *notifyEltPtr = m_head.GetNext();
       while (notifyEltPtr)
       {
-	notifyEltPtr->GetNotifyEvent()->Callback(*target, pdu,
-						 m_notify_fd, status);
-	notifyEltPtr = notifyEltPtr->GetNext();
+        notifyEltPtr->GetNotifyEvent()->Callback(*target, pdu,
+                                                 m_notify_fd, status);
+        notifyEltPtr = notifyEltPtr->GetNext();
       } // for each snmp object
     }
     if (target) // receive_snmp_notification calls new
@@ -751,5 +756,5 @@ int CNotifyEventQueue::HandleEvents(const int /*maxfds*/,
 #endif // HAVE_POLL_SYSCALL
 
 #ifdef SNMP_PP_NAMESPACE
-}; // end of namespace Snmp_pp
-#endif 
+} // end of namespace Snmp_pp
+#endif

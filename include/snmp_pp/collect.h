@@ -2,9 +2,9 @@
   _## 
   _##  collect.h  
   _##
-  _##  SNMP++v3.2.25
+  _##  SNMP++ v3.3
   _##  -----------------------------------------------
-  _##  Copyright (c) 2001-2010 Jochen Katz, Frank Fock
+  _##  Copyright (c) 2001-2013 Jochen Katz, Frank Fock
   _##
   _##  This software is based on SNMP++2.6 from Hewlett Packard:
   _##  
@@ -22,8 +22,6 @@
   _##  "AS-IS" without warranty of any kind, either express or implied. User 
   _##  hereby grants a royalty-free license to any and all derivatives based
   _##  upon this software code base. 
-  _##  
-  _##  Stuttgart, Germany, Thu Sep  2 00:07:47 CEST 2010 
   _##  
   _##########################################################################*/
 /*===================================================================
@@ -52,7 +50,7 @@
   DESCRIPTION: Simple Collection classes for SNMP++ classes.
 
 =====================================================================*/
-// $Id: collect.h 349 2008-11-17 23:23:35Z katz $
+// $Id: collect.h 2359 2013-05-09 20:07:01Z fock $
 
 #ifndef _COLLECTION_H_
 #define _COLLECTION_H_
@@ -61,14 +59,6 @@
 
 #ifdef SNMP_PP_NAMESPACE
 namespace Snmp_pp {
-#endif
-
-#ifndef TRUE
-#define TRUE 1
-#endif
-
-#ifndef FALSE
-#define FALSE 0
 #endif
 
 #define MAXT 25     // elements per block
@@ -312,10 +302,10 @@ template <class T> class SnmpCollection
       this->get_element(temp, z);
       if ( temp == i) {
 	pos = z;
-	return TRUE;
+	return true;
       }
     }
-    return FALSE;
+    return false;
   };
 
   /**
@@ -342,9 +332,9 @@ template <class T> class SnmpCollection
       // assign new collection to 'this'
       operator =(newCollection);
 
-      return TRUE;
+      return true;
     }
-    return FALSE;   // not found thus not removed
+    return false;   // not found thus not removed
   };
 
   /**

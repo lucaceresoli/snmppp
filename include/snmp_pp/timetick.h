@@ -2,9 +2,9 @@
   _## 
   _##  timetick.h  
   _##
-  _##  SNMP++v3.2.25
+  _##  SNMP++ v3.3
   _##  -----------------------------------------------
-  _##  Copyright (c) 2001-2010 Jochen Katz, Frank Fock
+  _##  Copyright (c) 2001-2013 Jochen Katz, Frank Fock
   _##
   _##  This software is based on SNMP++2.6 from Hewlett Packard:
   _##  
@@ -22,8 +22,6 @@
   _##  "AS-IS" without warranty of any kind, either express or implied. User 
   _##  hereby grants a royalty-free license to any and all derivatives based
   _##  upon this software code base. 
-  _##  
-  _##  Stuttgart, Germany, Thu Sep  2 00:07:47 CEST 2010 
   _##  
   _##########################################################################*/
 /*===================================================================
@@ -53,7 +51,7 @@
   Class definition for SMI Timeticks class.
 
 =====================================================================*/
-// $Id: timetick.h 1541 2009-05-29 11:29:22Z katz $
+// $Id: timetick.h 2359 2013-05-09 20:07:01Z fock $
 
 #ifndef _TIMETICKS
 #define _TIMETICKS
@@ -75,38 +73,47 @@ namespace Snmp_pp {
 class DLLOPT TimeTicks : public SnmpUInt32
 {
  public:
+#if 0
   /**
    * Constructs a zero TimeTicks object.
    */
   TimeTicks() : SnmpUInt32()
     { smival.syntax = sNMP_SYNTAX_TIMETICKS; };
+#endif
 
   /**
    * Constructs a TimeTicks object with the given value.
    *
    * @param val - time in hundredths of seconds.
    */
-  TimeTicks(const unsigned long val) : SnmpUInt32(val)
-    { smival.syntax = sNMP_SYNTAX_TIMETICKS; };
+  TimeTicks(const unsigned long val = 0)
+    : SnmpUInt32(val)
+  {
+    smival.syntax = sNMP_SYNTAX_TIMETICKS;
+  }
 
   /**
    * Copy constructor.
    *
    * @param t - Time for the new object.
    */
-  TimeTicks(const TimeTicks &t);
+  TimeTicks(const TimeTicks &t)
+    : SnmpUInt32(t)
+  {
+    smival.syntax = sNMP_SYNTAX_TIMETICKS;
+  }
 
   /**
    * Destructor.
    */
-  ~TimeTicks() {};
+  ~TimeTicks() {}
 
   /**
    * Return the syntax.
    *
    * @return Always returns sNMP_SYNTAX_TIMETICKS.
    */
-  SmiUINT32 get_syntax() const { return sNMP_SYNTAX_TIMETICKS; };
+  SmiUINT32 get_syntax() const { return sNMP_SYNTAX_TIMETICKS; }
 
   /**
    * Get a printable ASCII value.
@@ -118,12 +125,12 @@ class DLLOPT TimeTicks : public SnmpUInt32
    *
    * @return Pointer to a newly created copy of the object.
    */
-  SnmpSyntax *clone() const { return (SnmpSyntax *) new TimeTicks(*this); };
+  SnmpSyntax *clone() const { return (SnmpSyntax *) new TimeTicks(*this); }
 
   /**
    * Map other SnmpSyntax objects to TimeTicks.
    */
-  SnmpSyntax& operator=(const SnmpSyntax &val);
+  using SnmpUInt32::operator = ;
 
   /**
    * Overloaded assignment for TimeTicks.
@@ -132,18 +139,27 @@ class DLLOPT TimeTicks : public SnmpUInt32
    * @return self reference
    */
   TimeTicks& operator=(const TimeTicks &uli)
-    { smival.value.uNumber = uli.smival.value.uNumber;
-      m_changed = true; return *this; };
+  {
+    smival.value.uNumber = uli.smival.value.uNumber;
+    valid_flag = uli.valid_flag;
+    m_changed = true;
+    return *this;
+  }
 
   /**
    * Overloaded assignment for unsigned longs.
    *
-   * @param i - new value in hundrets of seconds
+   * @param ul - new value in hundrets of seconds
    * @return self reference
    */
-  TimeTicks& operator=(const unsigned long i)
-    { smival.value.uNumber = i; m_changed = true; return *this; };
+  TimeTicks& operator=(const unsigned long ul)
+  {
+    SnmpUInt32::operator = (ul);
+    return *this;
+  }
 
+#if 0
+  // XXX this operator is already provided by SnmpUInt32
   /**
    * Casting to unsigned long.
    *
@@ -156,7 +172,7 @@ class DLLOPT TimeTicks : public SnmpUInt32
    */
   void clear()
     { smival.value.uNumber = 0; m_changed = true; };
-
+#endif
  protected:
   SNMP_PP_MUTABLE char output_buffer[TICKOUTBUF];  // for storing printed form
 };

@@ -2,9 +2,9 @@
   _## 
   _##  uxsnmp.h  
   _##
-  _##  SNMP++v3.2.25
+  _##  SNMP++ v3.3
   _##  -----------------------------------------------
-  _##  Copyright (c) 2001-2010 Jochen Katz, Frank Fock
+  _##  Copyright (c) 2001-2013 Jochen Katz, Frank Fock
   _##
   _##  This software is based on SNMP++2.6 from Hewlett Packard:
   _##  
@@ -23,9 +23,8 @@
   _##  hereby grants a royalty-free license to any and all derivatives based
   _##  upon this software code base. 
   _##  
-  _##  Stuttgart, Germany, Thu Sep  2 00:07:47 CEST 2010 
-  _##  
   _##########################################################################*/
+// $Id: uxsnmp.h 2359 2013-05-09 20:07:01Z fock $
 
 #ifndef _UXSNMP_H_
 #define _UXSNMP_H_
@@ -44,7 +43,6 @@ namespace Snmp_pp {
 //-----[ internally used defines ]----------------------------------------
 #define MAXNAME 80                   // maximum name length
 #define MAX_ADDR_LEN 10              // maximum address len, ipx is 4+6
-#define SNMP_SHUTDOWN_MSG 0x0400+177 // shut down msg for stoping a blocked message
 #ifndef INVALID_SOCKET 
 #define INVALID_SOCKET ((SnmpSocket)(~0)) // value for invalid socket
 #endif
@@ -55,10 +53,6 @@ namespace Snmp_pp {
 #define sNMP_PDU_SET_ASYNC       23
 #define sNMP_PDU_GETBULK_ASYNC   24
 #define sNMP_PDU_INFORM_ASYNC    25
-
-//-----[ trap / notify macros ]-------------------------------------------
-#define IP_NOTIFY  162     // IP notification
-#define IPX_NOTIFY 0x2121  // IPX notification
 
 //------[ forward declaration of Snmp class ]-----------------------------
 class Snmp;
@@ -178,6 +172,16 @@ class DLLOPT Snmp: public SnmpSynchronized
   static const char *error_msg(const int c);
 #ifdef _SNMPv3
   /**
+   * Returns the error code for a SNMPv3 report Oid.
+   * If a report message is returned, then the contained Oid can be
+   * used to get a error code.
+   *
+   * @param v3Oid - Oid of a SNMPv3 report Pdu
+   * @return Error code.
+   */
+  static int error_code(const Oid& v3Oid);
+
+  /**
    * Returns a human readable error string.
    * If a report message is returned, then the contained Oid can be
    * used to get a error string.
@@ -185,7 +189,8 @@ class DLLOPT Snmp: public SnmpSynchronized
    * @param v3Oid - Oid of a SNMPv3 report Pdu
    * @return Null terminated error string.
    */
-  static const char* error_msg(const Oid& v3Oid);
+  static const char* error_msg(const Oid& v3Oid)
+    { return error_msg(error_code(v3Oid)); }
 #endif
 
   //------------------------[ Windows Sockets ]----------------------------

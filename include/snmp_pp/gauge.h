@@ -2,9 +2,9 @@
   _## 
   _##  gauge.h  
   _##
-  _##  SNMP++v3.2.25
+  _##  SNMP++ v3.3
   _##  -----------------------------------------------
-  _##  Copyright (c) 2001-2010 Jochen Katz, Frank Fock
+  _##  Copyright (c) 2001-2013 Jochen Katz, Frank Fock
   _##
   _##  This software is based on SNMP++2.6 from Hewlett Packard:
   _##  
@@ -22,8 +22,6 @@
   _##  "AS-IS" without warranty of any kind, either express or implied. User 
   _##  hereby grants a royalty-free license to any and all derivatives based
   _##  upon this software code base. 
-  _##  
-  _##  Stuttgart, Germany, Thu Sep  2 00:07:47 CEST 2010 
   _##  
   _##########################################################################*/
 /*===================================================================
@@ -52,7 +50,7 @@
   DESCRIPTION:
   Class definition for SMI Gauge32 class.
 =====================================================================*/
-// $Id: gauge.h 1541 2009-05-29 11:29:22Z katz $
+// $Id: gauge.h 2359 2013-05-09 20:07:01Z fock $
 
 #ifndef _GAUGE_H_
 #define _GAUGE_H_
@@ -74,31 +72,39 @@ class DLLOPT Gauge32: public SnmpUInt32
  public:
 
   //-----------[ Constructors and Destrucotr ]----------------------
-
+#if 0
   /**
    * Constructs a valid Gauge32 with value 0.
    */
-  Gauge32() : SnmpUInt32() { smival.syntax = sNMP_SYNTAX_GAUGE32; };
+  Gauge32() : SnmpUInt32() { smival.syntax = sNMP_SYNTAX_GAUGE32; }
+#endif
 
   /**
    * Constructs a valid Gauge32 with the given value.
    *
    * @param ul - value (0..MAX_UINT32)
    */
-  Gauge32(const unsigned long ul) : SnmpUInt32(ul)
-    { smival.syntax = sNMP_SYNTAX_GAUGE32; };
+  Gauge32(const unsigned long ul = 0)
+    : SnmpUInt32(ul)
+  {
+    smival.syntax = sNMP_SYNTAX_GAUGE32;
+  }
 
   /**
    * Copy constructor.
    *
    * @param g32 - value
    */
-  Gauge32(const Gauge32 &g32);
+  Gauge32(const Gauge32 &g32)
+    : SnmpUInt32(g32)
+  {
+    smival.syntax = sNMP_SYNTAX_GAUGE32;
+  }
 
   /**
    * Destructor (ensure that SnmpUInt32::~SnmpUInt32() is overridden).
    */
-  ~Gauge32() {};
+  ~Gauge32() {}
 
   //-----------[ SnmpSyntax methods ]----------------------
 
@@ -107,23 +113,29 @@ class DLLOPT Gauge32: public SnmpUInt32
    *
    * @return This method always returns sNMP_SYNTAX_GAUGE32.
    */
-  SmiUINT32 get_syntax() const { return sNMP_SYNTAX_GAUGE32; };
+  SmiUINT32 get_syntax() const { return sNMP_SYNTAX_GAUGE32; }
 
   /**
    * Clone the object.
    *
    * @return A cloned Gauge32 object allocated through new.
    */
-  SnmpSyntax *clone() const { return (SnmpSyntax *) new Gauge32(*this); };
+  SnmpSyntax *clone() const { return (SnmpSyntax *) new Gauge32(*this); }
 
   //-----------[ Overload some operators ]----------------------
+
+  using SnmpUInt32::operator = ;
 
   /**
    * Assign a Gauge32 to a Gauge32.
    */
   Gauge32& operator=(const Gauge32 &uli)
-    { smival.value.uNumber = uli.smival.value.uNumber;
-      m_changed = true;  return *this;};
+  {
+    smival.value.uNumber = uli.smival.value.uNumber;
+    valid_flag = uli.valid_flag;
+    m_changed = true;
+    return *this;
+  }
 
   /**
    * Assign a unsigned long to a Gauge32.
@@ -131,16 +143,20 @@ class DLLOPT Gauge32: public SnmpUInt32
    * @param ul - New value
    */
   Gauge32& operator=(const unsigned long ul)
-    { smival.value.uNumber = ul; m_changed = true; return *this; };
-
+  {
+    SnmpUInt32::operator = (ul);
+    return *this;
+  }
+#if 0
+  // XXX this operator is already provided by SnmpUInt32
   // otherwise, behave like an unsigned int
   /**
    * Cast a Gauge32 to unsigned long.
    *
    * @return Current value as unsigned long.
    */
-  operator unsigned long() { return smival.value.uNumber; };
-
+  operator unsigned long() { return smival.value.uNumber; }
+#endif
 };
 
 #ifdef SNMP_PP_NAMESPACE

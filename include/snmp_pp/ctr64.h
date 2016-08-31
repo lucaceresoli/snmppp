@@ -2,9 +2,9 @@
   _## 
   _##  ctr64.h  
   _##
-  _##  SNMP++v3.2.25
+  _##  SNMP++ v3.3
   _##  -----------------------------------------------
-  _##  Copyright (c) 2001-2010 Jochen Katz, Frank Fock
+  _##  Copyright (c) 2001-2013 Jochen Katz, Frank Fock
   _##
   _##  This software is based on SNMP++2.6 from Hewlett Packard:
   _##  
@@ -22,8 +22,6 @@
   _##  "AS-IS" without warranty of any kind, either express or implied. User 
   _##  hereby grants a royalty-free license to any and all derivatives based
   _##  upon this software code base. 
-  _##  
-  _##  Stuttgart, Germany, Thu Sep  2 00:07:47 CEST 2010 
   _##  
   _##########################################################################*/
 /*===================================================================
@@ -52,12 +50,16 @@
   DESCRIPTION:        SNMP Counter64 class definition.
 
 =====================================================================*/
-// $Id: ctr64.h 1558 2009-07-03 20:16:53Z katz $
+// $Id: ctr64.h 2359 2013-05-09 20:07:01Z fock $
 
 #ifndef _CTR64
 #define _CTR64
 
 #include "snmp_pp/smival.h"
+
+#ifndef UINT32_MAX
+# define UINT32_MAX (4294967295U)
+#endif
 
 #ifdef SNMP_PP_NAMESPACE
 namespace Snmp_pp {
@@ -76,7 +78,7 @@ class DLLOPT Counter64: public  SnmpSyntax
  public:
 
   //-----------[ Constructors and Destrucotr ]----------------------
-
+#if 0
   /**
    * Constructs a valid Couter64 with value 0.
    */
@@ -88,27 +90,52 @@ class DLLOPT Counter64: public  SnmpSyntax
    * @param lo - value (0..MAX_UINT32)
    */
   Counter64(unsigned long lo);
-
+#endif
   /**
    * Constructs a valid Counter64 with the given values.
    *
    * @param hi - value for the high 32 bits (0..MAX_UINT32)
    * @param lo - value for the low  32 bits (0..MAX_UINT32)
    */
-  Counter64(unsigned long hi, unsigned long lo);
+  Counter64(unsigned long hi, unsigned long lo)
+    : m_changed(true)
+  {
+    smival.syntax = sNMP_SYNTAX_CNTR64;
+    smival.value.hNumber.hipart = hi;
+    smival.value.hNumber.lopart = lo;
+  }
+
+  /**
+   * Constructs a valid Counter64 with the given value (default 0).
+   *
+   * @param val - value (full 64-bit)
+   */
+  Counter64(pp_uint64 val = 0)
+    : m_changed(true)
+  {
+    smival.syntax = sNMP_SYNTAX_CNTR64;
+    smival.value.hNumber.hipart = val >> 32;
+    smival.value.hNumber.lopart = val & UINT32_MAX;
+  }
 
   /**
    * Copy constructor.
    *
    * @param ctr64 - value
    */
-  Counter64(const Counter64 &ctr64);
+  Counter64(const Counter64 &ctr64)
+    : m_changed(true)
+  {
+    smival.syntax = sNMP_SYNTAX_CNTR64;
+    smival.value.hNumber = ctr64.smival.value.hNumber;
+  }
 
   /**
    * Destructor (ensure that SnmpSyntax::~SnmpSyntax() is overridden).
    */
-  ~Counter64() {};
+  ~Counter64() {}
 
+#if 0
   //-----------[ conversion from/to unsigned long long ]----------------
 
   /**
@@ -133,6 +160,14 @@ class DLLOPT Counter64: public  SnmpSyntax
    * @return A Counter64 object with the value of the param ld.
    */
   static Counter64 ll_to_c64(const pp_uint64 &ll);
+#endif
+
+  operator pp_uint64 () const
+  {
+    pp_uint64 v = ((pp_uint64)smival.value.hNumber.hipart) << 32;
+    v += smival.value.hNumber.lopart;
+    return v;
+  }
 
   //-----------[ get/set using 32 bit variables ]----------------------
 
@@ -141,14 +176,14 @@ class DLLOPT Counter64: public  SnmpSyntax
    *
    * @return The high part of the Counter64
    */
-  unsigned long high() const { return smival.value.hNumber.hipart; };
+  unsigned long high() const { return smival.value.hNumber.hipart; }
 
   /**
    * Get the low 32 bit part.
    *
    * @return The low part of the Counter64
    */
-  unsigned long low() const { return smival.value.hNumber.lopart; };
+  unsigned long low() const { return smival.value.hNumber.lopart; }
 
   /**
    * Set the high 32 bit part. The low part will stay unchanged.
@@ -156,7 +191,7 @@ class DLLOPT Counter64: public  SnmpSyntax
    * @param h - The new high part of the Counter64
    */
   void set_high(const unsigned long h)
-    { smival.value.hNumber.hipart = h; m_changed = true; };
+    { smival.value.hNumber.hipart = h; m_changed = true; }
 
   /**
    * Set the low 32 bit part. The high part will stay unchanged.
@@ -164,7 +199,7 @@ class DLLOPT Counter64: public  SnmpSyntax
    * @param l - The new low part of the Counter64
    */
   void set_low(const unsigned long l)
-    { smival.value.hNumber.lopart = l; m_changed = true; };
+    { smival.value.hNumber.lopart = l; m_changed = true; }
 
 
   //-----------[ SnmpSyntax methods ]----------------------
@@ -184,14 +219,14 @@ class DLLOPT Counter64: public  SnmpSyntax
    *
    * @return This method always returns sNMP_SYNTAX_CNTR64.
    */
-  SmiUINT32 get_syntax() const { return sNMP_SYNTAX_CNTR64; };
+  SmiUINT32 get_syntax() const { return sNMP_SYNTAX_CNTR64; }
 
   /**
    * Clone the object.
    *
    * @return A cloned Counter64 object allocated through new.
    */
-  SnmpSyntax *clone() const { return (SnmpSyntax *) new Counter64(*this); };
+  SnmpSyntax *clone() const { return (SnmpSyntax *) new Counter64(*this); }
 
   /**
    * Overloaded assignement operator.
@@ -206,7 +241,7 @@ class DLLOPT Counter64: public  SnmpSyntax
    *
    * @return Always true
    */
-  bool valid() const { return true; };
+  bool valid() const { return true; }
 
   /**
    * Return the space needed for serialization.
@@ -227,15 +262,31 @@ class DLLOPT Counter64: public  SnmpSyntax
   /**
    * Assign a Counter64 to a Counter64.
    */
-  Counter64& operator=(const Counter64 &ctr64);
+  Counter64& operator=(const Counter64 &ctr64)
+  {
+    if (this == &ctr64)
+      return *this;  // check for self assignment
+
+    smival.value.hNumber.hipart = ctr64.high();
+    smival.value.hNumber.lopart = ctr64.low();
+    m_changed = true;
+    return *this;
+  }
 
   /**
    * Assign a unsigned long to a Counter64.
    *
    * @param i - The new low part. The high part is cleared.
    */
-  Counter64& operator=(const unsigned long i);
+  Counter64& operator = (const pp_uint64 i)
+  {
+    m_changed = true;
+    smival.value.hNumber.hipart = i >> 32;
+    smival.value.hNumber.lopart = i & UINT32_MAX;
+    return *this;
+  }
 
+#if 0
   /**
    * Add two Counter64.
    */
@@ -311,8 +362,9 @@ class DLLOPT Counter64: public  SnmpSyntax
    * Greater than or equal operator for two Cunter64.
    */
   DLLOPT friend bool operator>=(const Counter64 &lhs, const Counter64 &rhs);
+#endif
 
- private:
+ protected:
 
   SNMP_PP_MUTABLE char output_buffer[CTR64OUTBUF];
   SNMP_PP_MUTABLE bool m_changed;

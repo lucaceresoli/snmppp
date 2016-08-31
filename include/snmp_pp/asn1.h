@@ -2,9 +2,9 @@
   _## 
   _##  asn1.h  
   _##
-  _##  SNMP++v3.2.25
+  _##  SNMP++ v3.3
   _##  -----------------------------------------------
-  _##  Copyright (c) 2001-2010 Jochen Katz, Frank Fock
+  _##  Copyright (c) 2001-2013 Jochen Katz, Frank Fock
   _##
   _##  This software is based on SNMP++2.6 from Hewlett Packard:
   _##  
@@ -23,10 +23,8 @@
   _##  hereby grants a royalty-free license to any and all derivatives based
   _##  upon this software code base. 
   _##  
-  _##  Stuttgart, Germany, Thu Sep  2 00:07:47 CEST 2010 
-  _##  
   _##########################################################################*/
-// $Id: asn1.h 1554 2009-06-28 19:50:17Z katz $
+// $Id: asn1.h 2543 2014-01-24 13:17:46Z fock $
 
 #ifndef _ASN1
 #define _ASN1
@@ -247,6 +245,8 @@ DLLOPT unsigned char *asn_parse_objid(unsigned char *data, int *datalength,
 DLLOPT unsigned char *asn_build_objid(unsigned char *data, int *datalength,
                                       unsigned char type,
                                       oid *objid, int objidlength);
+
+DLLOPT void asn_build_subid(unsigned long subid, unsigned char*& bp);
 
 DLLOPT unsigned char *asn_parse_null(unsigned char *data, int *datalength,
                                      unsigned char *type);

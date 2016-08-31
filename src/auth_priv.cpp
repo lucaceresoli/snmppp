@@ -2,9 +2,9 @@
   _## 
   _##  auth_priv.cpp  
   _##
-  _##  SNMP++v3.2.25
+  _##  SNMP++ v3.3
   _##  -----------------------------------------------
-  _##  Copyright (c) 2001-2010 Jochen Katz, Frank Fock
+  _##  Copyright (c) 2001-2013 Jochen Katz, Frank Fock
   _##
   _##  This software is based on SNMP++2.6 from Hewlett Packard:
   _##  
@@ -23,18 +23,14 @@
   _##  hereby grants a royalty-free license to any and all derivatives based
   _##  upon this software code base. 
   _##  
-  _##  Stuttgart, Germany, Thu Sep  2 00:07:47 CEST 2010 
-  _##  
   _##########################################################################*/
-char auth_priv_version[]="@(#) SNMP++ $Id: auth_priv.cpp 1799 2010-08-14 20:11:45Z katz $";
+char auth_priv_version[]="@(#) SNMP++ $Id: auth_priv.cpp 2361 2013-05-09 22:15:06Z katz $";
+
+#include <libsnmp.h>
 
 #include "snmp_pp/config_snmp_pp.h"
 
 #ifdef _SNMPv3
-
-#include <string.h>
-#include <stdlib.h>
-#include <time.h>
 
 // Only use DES, AES, SHA1 and MD5 from libtomcrypt if openssl is not used
 #if defined(_USE_LIBTOMCRYPT) && !defined(_USE_OPENSSL)
@@ -75,6 +71,8 @@ char auth_priv_version[]="@(#) SNMP++ $Id: auth_priv.cpp 1799 2010-08-14 20:11:4
 #ifdef SNMP_PP_NAMESPACE
 namespace Snmp_pp {
 #endif
+
+static const char *loggerModuleName = "snmp++.auth";
 
 /*-----------------[ defines for crypto libraries ]------------------*/
 
@@ -248,7 +246,7 @@ AuthPriv::AuthPriv(int &construct_state)
   {
     auth_size = 0;
 
-    LOG_BEGIN(ERROR_LOG | 1);
+    LOG_BEGIN(loggerModuleName, ERROR_LOG | 1);
     LOG("AuthPriv: Error allocating array for authentication.");
     LOG_END;
   }
@@ -259,7 +257,7 @@ AuthPriv::AuthPriv(int &construct_state)
   {
     priv_size = 0;
 
-    LOG_BEGIN(ERROR_LOG | 1);
+    LOG_BEGIN(loggerModuleName, ERROR_LOG | 1);
     LOG("AuthPriv: Error allocating array for privacy.");
     LOG_END;
   }
@@ -273,7 +271,7 @@ AuthPriv::AuthPriv(int &construct_state)
   /* Check size of salt, has to be 64 bits */
   if (sizeof(salt) != 8)
   {
-    LOG_BEGIN(ERROR_LOG | 1);
+    LOG_BEGIN(loggerModuleName, ERROR_LOG | 1);
     LOG("AuthPriv: *BUG* sizeof(pp_uint64) is not 8 bytes. snmp++ has to be patched for this system.");
     LOG_END;
 
@@ -296,7 +294,7 @@ AuthPriv::AuthPriv(int &construct_state)
   /* register needed hashes and ciphers in libtomcrypt */
   if (register_cipher(&rijndael_desc) < 0)
   {
-    LOG_BEGIN(ERROR_LOG | 1);
+    LOG_BEGIN(loggerModuleName, ERROR_LOG | 1);
     LOG("AuthPriv: Error registering Rijndael.");
     LOG_END;
 
@@ -305,7 +303,7 @@ AuthPriv::AuthPriv(int &construct_state)
 
   if (register_cipher(&des_desc) < 0)
   {
-    LOG_BEGIN(ERROR_LOG | 1);
+    LOG_BEGIN(loggerModuleName, ERROR_LOG | 1);
     LOG("AuthPriv: Error registering DES.");
     LOG_END;
 
@@ -314,7 +312,7 @@ AuthPriv::AuthPriv(int &construct_state)
 
   if (register_cipher(&des3_desc) < 0)
   {
-    LOG_BEGIN(ERROR_LOG | 1);
+    LOG_BEGIN(loggerModuleName, ERROR_LOG | 1);
     LOG("AuthPriv: Error registering 3DES.");
     LOG_END;
 
@@ -323,7 +321,7 @@ AuthPriv::AuthPriv(int &construct_state)
 
   if (register_hash(&sha1_desc) < 0)
   {
-    LOG_BEGIN(ERROR_LOG | 1);
+    LOG_BEGIN(loggerModuleName, ERROR_LOG | 1);
     LOG("AuthPriv: Error registering SHA1.");
     LOG_END;
 
@@ -332,7 +330,7 @@ AuthPriv::AuthPriv(int &construct_state)
 
   if (register_hash(&md5_desc) < 0)
   {
-    LOG_BEGIN(ERROR_LOG | 1);
+    LOG_BEGIN(loggerModuleName, ERROR_LOG | 1);
     LOG("AuthPriv: Error registering MD5.");
     LOG_END;
 
@@ -380,7 +378,7 @@ int AuthPriv::add_auth(Auth *new_auth)
     AuthPtr *new_array = new AuthPtr[id + 5];
     if (!new_array)
     {
-      LOG_BEGIN(ERROR_LOG | 1);
+      LOG_BEGIN(loggerModuleName, ERROR_LOG | 1);
       LOG("AuthPriv: Could not allocate new auth array.");
       LOG_END;
 
@@ -402,7 +400,7 @@ int AuthPriv::add_auth(Auth *new_auth)
 
   if (auth[id])
   {
-    LOG_BEGIN(WARNING_LOG | 4);
+    LOG_BEGIN(loggerModuleName, WARNING_LOG | 4);
     LOG("AuthPriv: deleting old auth object before adding new one (id)");
     LOG(id);
     LOG_END;
@@ -412,7 +410,7 @@ int AuthPriv::add_auth(Auth *new_auth)
 
   auth[id] = new_auth;
 
-  LOG_BEGIN(INFO_LOG | 6);
+  LOG_BEGIN(loggerModuleName, INFO_LOG | 6);
   LOG("AuthPriv: Added auth protocol (id)");
   LOG(id);
   LOG_END;
@@ -424,7 +422,7 @@ int AuthPriv::del_auth(const int auth_id)
 {
   if ((auth_id < 0) || (auth_id >= auth_size) || (auth[auth_id] == 0))
   {
-    LOG_BEGIN(WARNING_LOG | 4);
+    LOG_BEGIN(loggerModuleName, WARNING_LOG | 4);
     LOG("AuthPriv: Request to delete non existing auth protocol (id)");
     LOG(auth_id);
     LOG_END;
@@ -435,7 +433,7 @@ int AuthPriv::del_auth(const int auth_id)
   delete auth[auth_id];
   auth[auth_id] = 0;
 
-  LOG_BEGIN(INFO_LOG | 6);
+  LOG_BEGIN(loggerModuleName, INFO_LOG | 6);
   LOG("AuthPriv: Removed auth protocol (id)");
   LOG(auth_id);
   LOG_END;
@@ -463,7 +461,7 @@ int AuthPriv::add_priv(Priv *new_priv)
     PrivPtr *new_array = new PrivPtr[id + 5];
     if (!new_array)
     {
-      LOG_BEGIN(ERROR_LOG | 1);
+      LOG_BEGIN(loggerModuleName, ERROR_LOG | 1);
       LOG("AuthPriv: Could not allocate new priv array.");
       LOG_END;
 
@@ -485,7 +483,7 @@ int AuthPriv::add_priv(Priv *new_priv)
 
   if (priv[id])
   {
-    LOG_BEGIN(WARNING_LOG | 4);
+    LOG_BEGIN(loggerModuleName, WARNING_LOG | 4);
     LOG("AuthPriv: deleting old priv object before adding new one (id)");
     LOG(id);
     LOG_END;
@@ -495,7 +493,7 @@ int AuthPriv::add_priv(Priv *new_priv)
 
   priv[id] = new_priv;
 
-  LOG_BEGIN(INFO_LOG | 6);
+  LOG_BEGIN(loggerModuleName, INFO_LOG | 6);
   LOG("AuthPriv: Added priv protocol (id)");
   LOG(id);
   LOG_END;
@@ -507,7 +505,7 @@ int AuthPriv::del_priv(const int priv_id)
 {
   if ((priv_id < 0) || (priv_id >= priv_size) || (priv[priv_id] == 0))
   {
-    LOG_BEGIN(WARNING_LOG | 4);
+    LOG_BEGIN(loggerModuleName, WARNING_LOG | 4);
     LOG("AuthPriv: Request to delete non existing priv protocol (id)");
     LOG(priv_id);
     LOG_END;
@@ -518,7 +516,7 @@ int AuthPriv::del_priv(const int priv_id)
   delete priv[priv_id];
   priv[priv_id] = 0;
 
-  LOG_BEGIN(INFO_LOG | 6);
+  LOG_BEGIN(loggerModuleName, INFO_LOG | 6);
   LOG("AuthPriv: Removed priv protocol (id)");
   LOG(priv_id);
   LOG_END;
@@ -656,7 +654,7 @@ int AuthPriv::password_to_key_auth(const int            auth_prot,
 
   if (!password || (password_len == 0))
   {
-    LOG_BEGIN(WARNING_LOG | 2);
+    LOG_BEGIN(loggerModuleName, WARNING_LOG | 2);
     LOG("AuthPriv: Password to key auth needs a non empty password");
     LOG_END;
 
@@ -694,7 +692,7 @@ int AuthPriv::password_to_key_priv(const int            auth_prot,
 
   if (!password || (password_len == 0))
   {
-    LOG_BEGIN(WARNING_LOG | 2);
+    LOG_BEGIN(loggerModuleName, WARNING_LOG | 2);
     LOG("AuthPriv: Password to key priv needs a non empty password");
     LOG_END;
 
@@ -795,7 +793,7 @@ int AuthPriv::add_default_modules()
 
   if (add_auth(new AuthSHA()) != SNMP_ERROR_SUCCESS)
   {
-    LOG_BEGIN(ERROR_LOG | 1);
+    LOG_BEGIN(loggerModuleName, ERROR_LOG | 1);
     LOG("AuthPriv: Could not add default protocol AuthSHA.");
     LOG_END;
 
@@ -804,7 +802,7 @@ int AuthPriv::add_default_modules()
 
   if (add_auth(new AuthMD5()) != SNMP_ERROR_SUCCESS)
   {
-    LOG_BEGIN(ERROR_LOG | 1);
+    LOG_BEGIN(loggerModuleName, ERROR_LOG | 1);
     LOG("AuthPriv: Could not add default protocol AuthMD5.");
     LOG_END;
 
@@ -813,7 +811,7 @@ int AuthPriv::add_default_modules()
 
   if (add_priv(new PrivDES()) != SNMP_ERROR_SUCCESS)
   {
-    LOG_BEGIN(ERROR_LOG | 1);
+    LOG_BEGIN(loggerModuleName, ERROR_LOG | 1);
     LOG("AuthPriv: Could not add default protocol PrivDES.");
     LOG_END;
 
@@ -823,7 +821,7 @@ int AuthPriv::add_default_modules()
 #ifdef _USE_IDEA
   if (add_priv(new PrivIDEA()) != SNMP_ERROR_SUCCESS)
   {
-    LOG_BEGIN(ERROR_LOG | 1);
+    LOG_BEGIN(loggerModuleName, ERROR_LOG | 1);
     LOG("AuthPriv: Could not add default protocol PrivIDEA.");
     LOG_END;
 
@@ -834,7 +832,7 @@ int AuthPriv::add_default_modules()
 #if defined(_USE_LIBTOMCRYPT) || defined(_USE_OPENSSL)
   if (add_priv(new PrivAES(SNMP_PRIVPROTOCOL_AES128)) != SNMP_ERROR_SUCCESS)
   {
-    LOG_BEGIN(ERROR_LOG | 1);
+    LOG_BEGIN(loggerModuleName, ERROR_LOG | 1);
     LOG("AuthPriv: Could not add default protocol PrivAES 128.");
     LOG_END;
 
@@ -843,7 +841,7 @@ int AuthPriv::add_default_modules()
 
   if (add_priv(new PrivAES(SNMP_PRIVPROTOCOL_AES192)) != SNMP_ERROR_SUCCESS)
   {
-    LOG_BEGIN(ERROR_LOG | 1);
+    LOG_BEGIN(loggerModuleName, ERROR_LOG | 1);
     LOG("AuthPriv: Could not add default protocol PrivAES 192.");
     LOG_END;
 
@@ -852,7 +850,7 @@ int AuthPriv::add_default_modules()
 
   if (add_priv(new PrivAES(SNMP_PRIVPROTOCOL_AES256)) != SNMP_ERROR_SUCCESS)
   {
-    LOG_BEGIN(ERROR_LOG | 1);
+    LOG_BEGIN(loggerModuleName, ERROR_LOG | 1);
     LOG("AuthPriv: Could not add default protocol PrivAES 256.");
     LOG_END;
 
@@ -863,7 +861,7 @@ int AuthPriv::add_default_modules()
 #ifdef _USE_3DES_EDE
   if (add_priv(new Priv3DES_EDE()) != SNMP_ERROR_SUCCESS)
   {
-    LOG_BEGIN(ERROR_LOG | 1);
+    LOG_BEGIN(loggerModuleName, ERROR_LOG | 1);
     LOG("AuthPriv: Could not add default protocol Priv3DES_EDE.");
     LOG_END;
 
@@ -874,7 +872,7 @@ int AuthPriv::add_default_modules()
 
   if (ret == SNMP_CLASS_SUCCESS)
   {
-    LOG_BEGIN(INFO_LOG | 3);
+    LOG_BEGIN(loggerModuleName, INFO_LOG | 3);
     LOG("AuthPriv: Added default Auth and Priv protocols.");
     LOG_END;
   }
@@ -938,7 +936,7 @@ int AuthPriv::auth_inc_msg(const int            auth_prot,
   if ((auth_par_ptr < msg) ||
       (msg + msg_len < auth_par_ptr + auth_par_len))
   {
-    LOG_BEGIN(WARNING_LOG | 1);
+    LOG_BEGIN(loggerModuleName, WARNING_LOG | 1);
     LOG("AuthPriv: Authentication data is not within message (msg start) (len) (auth start) (len)");
     LOG(msg);
     LOG(msg_len);
@@ -1633,9 +1631,9 @@ PrivAES::PrivAES(const int aes_type_)
 
   unsigned int testswap = htonl(0x01020304);
   if (testswap == 0x01020304)
-    need_byteswap = FALSE;
+    need_byteswap = false;
   else
-    need_byteswap = TRUE;
+    need_byteswap = true;
 }
 
 const char *PrivAES::get_id_string() const
@@ -1797,6 +1795,7 @@ int PrivAES::extend_short_key(const unsigned char *password,
                               const unsigned int   max_key_len,
                               Auth                *auth)
 {
+  (void)password; (void)password_len; (void)engine_id; (void)engine_id_len;
   if (max_key_len < (unsigned)key_bytes)
       return SNMPv3_USM_ERROR;
 
@@ -2077,11 +2076,15 @@ Priv3DES_EDE::extend_short_key(const unsigned char *password,
 
   if (!p2k_buf) return SNMPv3_USM_ERROR;
 
+  // p2k function takes the old key as input
+  unsigned char *p2k_input_buf = key;
+  unsigned int   p2k_input_len = *key_len;
+
   while (*key_len < TRIPLEDES_EDE_KEY_LEN)
   {
     unsigned int p2k_buf_len = p2k_output_len;
 
-    res = auth->password_to_key(key, *key_len,
+    res = auth->password_to_key(p2k_input_buf, p2k_input_len,
 				engine_id, engine_id_len,
 				p2k_buf, &p2k_buf_len);
 
@@ -2097,6 +2100,10 @@ Priv3DES_EDE::extend_short_key(const unsigned char *password,
 	copy_bytes = max_key_len - *key_len;
 
     memcpy(key + *key_len, p2k_buf, copy_bytes);
+
+    // save just generated key for next iteration
+    p2k_input_buf = key + *key_len;
+    p2k_input_len = p2k_buf_len;
 
     *key_len += copy_bytes;
   }
@@ -2194,7 +2201,7 @@ bool Priv3DES_EDE::test()
 
 
 #ifdef SNMP_PP_NAMESPACE
-}; // end of namespace Snmp_pp
+} // end of namespace Snmp_pp
 #endif 
 
 #endif // _SNMPv3

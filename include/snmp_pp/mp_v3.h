@@ -2,9 +2,9 @@
   _## 
   _##  mp_v3.h  
   _##
-  _##  SNMP++v3.2.25
+  _##  SNMP++ v3.3
   _##  -----------------------------------------------
-  _##  Copyright (c) 2001-2010 Jochen Katz, Frank Fock
+  _##  Copyright (c) 2001-2013 Jochen Katz, Frank Fock
   _##
   _##  This software is based on SNMP++2.6 from Hewlett Packard:
   _##  
@@ -23,11 +23,9 @@
   _##  hereby grants a royalty-free license to any and all derivatives based
   _##  upon this software code base. 
   _##  
-  _##  Stuttgart, Germany, Thu Sep  2 00:07:47 CEST 2010 
-  _##  
   _##########################################################################*/
 
-// $Id: mp_v3.h 320 2007-11-08 22:05:23Z katz $
+// $Id: mp_v3.h 2359 2013-05-09 20:07:01Z fock $
 
 #ifndef _MP_V3
 #define _MP_V3
@@ -493,7 +491,7 @@ class DLLOPT v3MP
     int delete_entry(const OctetStr &host, int port);
 
   private:
-    int initialize_table(const int size);
+    bool initialize_table(const int size);
 
     struct Entry_T
     {

@@ -2,9 +2,9 @@
   _## 
   _##  auth_priv.h  
   _##
-  _##  SNMP++v3.2.25
+  _##  SNMP++ v3.3
   _##  -----------------------------------------------
-  _##  Copyright (c) 2001-2010 Jochen Katz, Frank Fock
+  _##  Copyright (c) 2001-2013 Jochen Katz, Frank Fock
   _##
   _##  This software is based on SNMP++2.6 from Hewlett Packard:
   _##  
@@ -23,10 +23,8 @@
   _##  hereby grants a royalty-free license to any and all derivatives based
   _##  upon this software code base. 
   _##  
-  _##  Stuttgart, Germany, Thu Sep  2 00:07:47 CEST 2010 
-  _##  
   _##########################################################################*/
-// $Id: auth_priv.h 345 2008-10-29 20:14:40Z katz $
+// $Id: auth_priv.h 2359 2013-05-09 20:07:01Z fock $
 
 #ifndef _AUTH_PRIV_
 #define _AUTH_PRIV_
@@ -661,7 +659,17 @@ class DLLOPT PrivDES: public Priv
                        unsigned int        *key_len,
                        const unsigned int   max_key_len,
                        Auth                *auth)
-    { return SNMPv3_USM_ERROR; /* not needed for DES! */ };
+  {
+    (void)password;
+    (void)password_len;
+    (void)engine_id;
+    (void)engine_id_len;
+    (void)key;
+    (void)key_len;
+    (void)max_key_len;
+    (void)auth;
+    return SNMPv3_USM_ERROR; /* not needed for DES! */
+  }
 
   int get_id() const { return SNMP_PRIVPROTOCOL_DES; };
   const char *get_id_string() const { return "DES"; };
@@ -782,7 +790,7 @@ public:
 #if defined(_USE_LIBTOMCRYPT) && !defined(_USE_OPENSSL)
   int cipher;
 #endif
-  int need_byteswap;
+  bool need_byteswap;
 };
 #endif // _USE_LIBTOMCRYPT or _USE_OPENSSL
 

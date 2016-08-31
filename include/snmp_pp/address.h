@@ -2,9 +2,9 @@
   _## 
   _##  address.h  
   _##
-  _##  SNMP++v3.2.25
+  _##  SNMP++ v3.3
   _##  -----------------------------------------------
-  _##  Copyright (c) 2001-2010 Jochen Katz, Frank Fock
+  _##  Copyright (c) 2001-2013 Jochen Katz, Frank Fock
   _##
   _##  This software is based on SNMP++2.6 from Hewlett Packard:
   _##  
@@ -22,8 +22,6 @@
   _##  "AS-IS" without warranty of any kind, either express or implied. User 
   _##  hereby grants a royalty-free license to any and all derivatives based
   _##  upon this software code base. 
-  _##  
-  _##  Stuttgart, Germany, Thu Sep  2 00:07:47 CEST 2010 
   _##  
   _##########################################################################*/
 /*
@@ -53,7 +51,7 @@
   addresses into easy to use, safe and portable classes.
 
 =====================================================================*/
-// $Id: address.h 307 2007-09-14 20:01:45Z katz $
+// $Id: address.h 2359 2013-05-09 20:07:01Z fock $
 
 #ifndef _ADDRESS
 #define _ADDRESS
@@ -61,13 +59,6 @@
 
 //----[ includes ]-----------------------------------------------------
 #include <string.h>
-
-#if defined (CPU) && CPU == PPC603
-#undef HASH1
-#undef HASH2
-#else
-#include <memory.h>
-#endif
 
 #include "snmp_pp/config_snmp_pp.h" // for _IPX_ADDRESS and _MAC_ADDRESS
 #include "snmp_pp/smival.h"
@@ -83,7 +74,7 @@
 #endif
 
 #ifdef __unix
-#if !defined(_AIX) && !defined(__QNX_NEUTRINO)
+#if !defined(_AIX)
 #include <unistd.h>
 #endif
 #include <sys/socket.h>
@@ -119,9 +110,9 @@ namespace Snmp_pp {
 #define IPXSOCKLEN 12
 #define MACLEN     6
 #define MAX_FRIENDLY_NAME 80
-#define HASH0 19
-#define HASH1 13
-#define HASH2 7
+#define PP_MAC_HASH0 19
+#define PP_MAC_HASH1 13
+#define PP_MAC_HASH2 7
 
 //---[ forward declarations ]-----------------------------------------
 class GenAddress;
@@ -168,35 +159,35 @@ class DLLOPT Address : public SnmpSyntax
   /**
    * Allow destruction of derived classes.
    */
-  virtual ~Address() {};
+  virtual ~Address() {}
 
   /// overloaded equivlence operator, are two addresses equal?
   DLLOPT friend int operator==(const Address &lhs,const Address &rhs);
 
   /// overloaded not equivlence operator, are two addresses not equal?
   DLLOPT friend int operator!=(const Address &lhs, const Address &rhs)
-    { return !(lhs == rhs); };
+    { return !(lhs == rhs); }
 
   /// overloaded > operator, is a1 > a2
   DLLOPT friend int operator>(const Address &lhs,const Address &rhs);
 
   /// overloaded >= operator, is a1 >= a2
   DLLOPT friend int operator>=(const Address &lhs,const Address &rhs)
-    { if ((lhs > rhs) || (lhs == rhs)) return true;  return false; };
+    { if ((lhs > rhs) || (lhs == rhs)) return true;  return false; }
 
   /// overloaded < operator, is a1 < a2
   DLLOPT friend int operator<(const Address &lhs,const Address &rhs);
 
   /// overloaded <= operator, is a1 <= a2
   DLLOPT friend int operator<=(const Address &lhs, const Address &rhs)
-    { if ((lhs < rhs) || (lhs == rhs)) return true; return false; };
+    { if ((lhs < rhs) || (lhs == rhs)) return true; return false; }
 
   /// equivlence operator overloaded, are an address and a string equal?
   DLLOPT friend int operator==(const Address &lhs,const char *rhs);
 
   /// overloaded not equivlence operator, are an address and string not equal?
   DLLOPT friend int operator!=(const Address &lhs,const char *rhs)
-    { return !(lhs == rhs); };
+    { return !(lhs == rhs); }
 
   /// overloaded < , is an address greater than a string?
   DLLOPT friend int operator>(const Address &lhs,const char *rhs);
@@ -222,7 +213,7 @@ class DLLOPT Address : public SnmpSyntax
    *
    * @return true if the object is valid
    */
-  virtual bool valid() const { return valid_flag; };
+  virtual bool valid() const { return valid_flag; }
 
   /**
    * Return the space needed for serialization.
@@ -239,7 +230,7 @@ class DLLOPT Address : public SnmpSyntax
   unsigned char& operator[](const int position)
     { addr_changed = true; valid_flag = true;
       return (position < ADDRBUF) ? address_buffer[position]
-                                  : address_buffer[0]; };
+                                  : address_buffer[0]; }
 
   /**
    * Access as an array (read only).
@@ -249,7 +240,7 @@ class DLLOPT Address : public SnmpSyntax
    * @return the byte at the given position
    */
   unsigned char operator[](const int position) const
-    { return (position < ADDRBUF) ? address_buffer[ position] : 0; }
+    { return (unsigned char)((position < ADDRBUF) ? address_buffer[ position] : 0); }
 
 
   /**
@@ -263,13 +254,15 @@ class DLLOPT Address : public SnmpSyntax
    */
   virtual addr_type get_type() const = 0;
 
+  using SnmpSyntax::operator =;
   /**
    * Overloaded assignment operator.
    */
-  virtual SnmpSyntax& operator=(const SnmpSyntax &val) = 0;
+  virtual Address & operator = (const Address &val) = 0;
+  virtual Address & operator = (const char *str) { valid_flag = parse_address(str); addr_changed = true; return *this; }
 
   // return a hash key
-  virtual unsigned int hashFunction() const { return 0;};
+  virtual unsigned int hashFunction() const { return 0; }
 
  protected:
   SNMP_PP_MUTABLE bool addr_changed;
@@ -294,19 +287,12 @@ class DLLOPT Address : public SnmpSyntax
   /**
    * Is this a GenAddress object.
    */
-  virtual bool is_gen_address() const { return false; };
+  virtual bool is_gen_address() const { return false; }
 
   /**
    * Reset the object.
    */
   void clear();
-
-#if !defined HAVE_GETHOSTBYNAME_R || !defined HAVE_GETHOSTBYADDR_R || !defined HAVE_REENTRANT_GETHOSTBYNAME || !defined HAVE_REENTRANT_GETHOSTBYADDR
-#ifdef _THREADS
-  static SnmpSynchronized syscall_mutex;
-#endif
-#endif
-
 };
 
 
@@ -351,29 +337,31 @@ class DLLOPT IpAddress : public Address
   /**
    * Destructor (ensure that SnmpSyntax::~SnmpSyntax() is overridden).
    */
-  ~IpAddress() {};
+  ~IpAddress() {}
+
+  using Address::operator =;
 
   /**
    * Map other SnmpSyntax objects to IpAddress.
    */
-  SnmpSyntax& operator=(const SnmpSyntax &val);
+  virtual SnmpSyntax& operator=(const SnmpSyntax &val);
+
+  /**
+   * Map other Address objects to IpAddress.
+   */
+  virtual Address& operator = (const Address &val);
 
   /**
    * Overloaded assignment operator for other IP addresses.
    */
-  IpAddress& operator=(const IpAddress &ipaddress);
-
-  /**
-   * Overloaded assignment operator for strings.
-   */
-  IpAddress& operator=(const char *inaddr);
+  virtual IpAddress& operator=(const IpAddress &ipaddress);
 
   /**
    * Clone this object.
    *
    * @return Pointer to the newly created object (allocated through new).
    */
-  SnmpSyntax *clone() const { return (SnmpSyntax *) new IpAddress(*this); };
+  SnmpSyntax *clone() const { return (SnmpSyntax *) new IpAddress(*this); }
 
   /**
    * Return the friendly name. Does a reverse DNS lookup for the IP address.
@@ -390,7 +378,7 @@ class DLLOPT IpAddress : public Address
    * @return String containing the numerical address
    */
   virtual const char *get_printable() const
-    { if (addr_changed) format_output(); return output_buffer; };
+    { if (addr_changed) format_output(); return output_buffer; }
 
   /**
    * Overloaded operator for streaming output.
@@ -398,7 +386,7 @@ class DLLOPT IpAddress : public Address
    * @return String containing the numerical address
    */
   virtual operator const char *() const
-    { if (addr_changed) format_output(); return output_buffer; };
+    { if (addr_changed) format_output(); return output_buffer; }
 
   /**
    * Logically AND the address with the param.
@@ -420,41 +408,41 @@ class DLLOPT IpAddress : public Address
    */
   virtual int get_length() const
     { return (ip_version == version_ipv4) ? IPLEN : 
-	     (have_ipv6_scope ? IP6LEN_WITH_SCOPE : IP6LEN_NO_SCOPE); };
+	     (have_ipv6_scope ? IP6LEN_WITH_SCOPE : IP6LEN_NO_SCOPE); }
 
   /**
    * Return the type of the address.
    * @see Address::addr_type
    * @return Always Address:type_ip
    */
-  virtual addr_type get_type() const { return type_ip; };
+  virtual addr_type get_type() const { return type_ip; }
 
   /**
    * Return the syntax.
    *
    * @return This method always returns sNMP_SYNTAX_IPADDR.
    */
-  virtual SmiUINT32 get_syntax() const { return sNMP_SYNTAX_IPADDR; };
+  virtual SmiUINT32 get_syntax() const { return sNMP_SYNTAX_IPADDR; }
 
   /**
    * Return the space needed for serialization.
    */
   virtual int get_asn1_length() const
-    { return get_length() + 2; };
+    { return get_length() + 2; }
 
   /**
    * Return the IP version of the address.
    *
    * @return one of Address::version_type
    */
-  virtual version_type get_ip_version() const { return ip_version; };
+  virtual version_type get_ip_version() const { return ip_version; }
 
   /**
    * Map a IPv4 address to a IPv6 address.
    *
    * @return - TRUE if no error occured.
    */
-  virtual int map_to_ipv6();
+  virtual bool map_to_ipv6();
 
   /**
    * Get the IPv6 scope
@@ -472,7 +460,7 @@ class DLLOPT IpAddress : public Address
   void clear();
 
   bool has_ipv6_scope() const
-      { return (ip_version == version_ipv6) && have_ipv6_scope; };
+      { return (ip_version == version_ipv6) && have_ipv6_scope; }
 
  protected:
   SNMP_PP_MUTABLE char output_buffer[OUTBUFF];           // output buffer
@@ -555,47 +543,48 @@ class DLLOPT UdpAddress : public IpAddress
   /**
    * Destructor (ensure that SnmpSyntax::~SnmpSyntax() is overridden).
    */
-  ~UdpAddress() {};
+  ~UdpAddress() {}
+
+  using IpAddress::operator =;
 
   /**
    * Map other SnmpSyntax objects to UdpAddress.
    */
-  SnmpSyntax& operator=(const SnmpSyntax &val);
+  virtual SnmpSyntax& operator=(const SnmpSyntax &val);
+
+  /**
+   * Map other Address objects to UdpAddress.
+   */
+  virtual Address & operator = (const Address &val);
 
   /**
    * Overloaded assignment operator for UdpAddress.
    */
-  UdpAddress& operator=(const UdpAddress &udpaddr);
+  virtual UdpAddress& operator=(const UdpAddress &udpaddr);
 
   /**
    * Overloaded assignment operator for IpAddress.
    */
-  UdpAddress& operator=(const IpAddress &ipaddr);
-
-  /**
-   * Overloaded assignment operator for strings.
-   */
-  UdpAddress& operator=(const char *inaddr);
+  virtual UdpAddress& operator=(const IpAddress &ipaddr);
 
   /**
    * Return the syntax.
    *
    * @return This method always returns sNMP_SYNTAX_OCTETS.
    */
-  SmiUINT32 get_syntax() const { return sNMP_SYNTAX_OCTETS; };
+  SmiUINT32 get_syntax() const { return sNMP_SYNTAX_OCTETS; }
 
   /**
    * Return the space needed for serialization.
    */
-  virtual int get_asn1_length() const
-    { return get_length() + 2; };
+  virtual int get_asn1_length() const { return get_length() + 2; }
 
   /**
    * Clone this object.
    *
    * @return Pointer to the newly created object (allocated through new).
    */
-  SnmpSyntax *clone() const { return (SnmpSyntax *) new UdpAddress(*this); };
+  SnmpSyntax *clone() const { return (SnmpSyntax *) new UdpAddress(*this); }
 
   /**
    * Get a printable ASCII value of the address.
@@ -603,7 +592,7 @@ class DLLOPT UdpAddress : public IpAddress
    * @return String containing the numerical address
    */
   virtual const char *get_printable() const
-    { if (addr_changed) format_output(); return output_buffer; };
+    { if (addr_changed) format_output(); return output_buffer; }
 
   /**
    * Overloaded operator for streaming output.
@@ -611,7 +600,7 @@ class DLLOPT UdpAddress : public IpAddress
    * @return String containing the numerical address
    */
   virtual operator const char *() const
-    { if (addr_changed) format_output(); return output_buffer; };
+    { if (addr_changed) format_output(); return output_buffer; }
 
   /**
    * Set the port number.
@@ -632,27 +621,27 @@ class DLLOPT UdpAddress : public IpAddress
    */
   virtual int get_length() const
     { return (ip_version == version_ipv4) ? UDPIPLEN : 
-             (have_ipv6_scope ? UDPIP6LEN_WITH_SCOPE : UDPIP6LEN_NO_SCOPE);};
+             (have_ipv6_scope ? UDPIP6LEN_WITH_SCOPE : UDPIP6LEN_NO_SCOPE); }
 
   /**
    * Return the type of the address.
    * @see Address::addr_type
    * @return Always Address:type_udp
    */
-  virtual addr_type get_type() const { return type_udp; };
+  virtual addr_type get_type() const { return type_udp; }
 
   /**
    * Map a IPv4 UDP address to a IPv6 UDP address.
    *
    * @return - TRUE if no error occured.
    */
-  virtual int map_to_ipv6();
+  virtual bool map_to_ipv6();
 
   /**
    * Reset the object.
    */
   void clear()
-    { Address::clear(); memset(output_buffer, 0, sizeof(output_buffer)); };
+    { Address::clear(); memset(output_buffer, 0, sizeof(output_buffer)); }
 
   /**
    * Set the IPv6 scope
@@ -692,24 +681,25 @@ public:
   MacAddress(const GenAddress &genaddr);
 
   // destructor
-  ~MacAddress() {};
+  ~MacAddress() {}
 
   /**
    * Return the syntax.
    *
    * @return This method always returns sNMP_SYNTAX_OCTETS.
    */
-  SmiUINT32 get_syntax() const { return sNMP_SYNTAX_OCTETS; };
+  SmiUINT32 get_syntax() const { return sNMP_SYNTAX_OCTETS; }
 
   /**
    * Return the space needed for serialization.
    */
-  virtual int get_asn1_length() const { return MACLEN + 2; };
+  virtual int get_asn1_length() const { return MACLEN + 2; }
 
+  using Address::operator =;
   /**
    * Map other SnmpSyntax objects to MacAddress.
    */
-  SnmpSyntax& operator=(const SnmpSyntax &val);
+  virtual SnmpSyntax& operator=(const SnmpSyntax &val);
 
   // assignment to another IpAddress object overloaded
   MacAddress& operator=(const MacAddress &macaddress);
@@ -719,7 +709,7 @@ public:
    *
    * @return Pointer to the newly created object (allocated through new).
    */
-  SnmpSyntax *clone() const { return (SnmpSyntax *) new MacAddress(*this); };
+  SnmpSyntax *clone() const { return (SnmpSyntax *) new MacAddress(*this); }
 
   /**
    * Get a printable ASCII value of the address.
@@ -727,7 +717,7 @@ public:
    * @return String containing the numerical address
    */
   virtual const char *get_printable() const
-    { if (addr_changed) format_output(); return output_buffer; };
+    { if (addr_changed) format_output(); return output_buffer; }
 
   /**
    * Overloaded operator for streaming output.
@@ -735,19 +725,19 @@ public:
    * @return String containing the numerical address
    */
   virtual operator const char *() const
-    { if (addr_changed) format_output(); return output_buffer; };
+    { if (addr_changed) format_output(); return output_buffer; }
 
   /**
    * Get the length of the binary address (accessible through operator[]).
    */
-  virtual int get_length() const { return MACLEN; };
+  virtual int get_length() const { return MACLEN; }
 
   /**
    * Return the type of the address.
    * @see Address::addr_type
    * @return Always Address:type_mac
    */
-  virtual addr_type get_type() const { return type_mac; };
+  virtual addr_type get_type() const { return type_mac; }
 
   // return a hash key
   unsigned int hashFunction() const;
@@ -756,7 +746,7 @@ public:
    * Reset the object.
    */
   void clear()
-    { Address::clear(); memset(output_buffer, 0, sizeof(output_buffer)); };
+    { Address::clear(); memset(output_buffer, 0, sizeof(output_buffer)); }
 
  protected:
   SNMP_PP_MUTABLE char output_buffer[OUTBUFF];           // output buffer
@@ -789,27 +779,28 @@ public:
   IpxAddress(const GenAddress &genaddr);
 
   // destructor
-  ~IpxAddress() {};
+  ~IpxAddress() {}
 
   /**
    * Return the syntax.
    *
    * @return This method always returns sNMP_SYNTAX_OCTETS.
    */
-  virtual SmiUINT32 get_syntax() const { return sNMP_SYNTAX_OCTETS; };
+  virtual SmiUINT32 get_syntax() const { return sNMP_SYNTAX_OCTETS; }
 
   /**
    * Return the space needed for serialization.
    */
-  virtual int get_asn1_length() const  { return IPXLEN + 2; };
+  virtual int get_asn1_length() const  { return IPXLEN + 2; }
 
+  using Address::operator =;
   /**
    * Map other SnmpSyntax objects to IpxAddress.
    */
-  SnmpSyntax& operator=(const SnmpSyntax &val);
+  virtual SnmpSyntax& operator=(const SnmpSyntax &val);
 
   // assignment to another IpAddress object overloaded
-  IpxAddress& operator=(const IpxAddress &ipxaddress);
+  virtual IpxAddress& operator=(const IpxAddress &ipxaddress);
 
 #ifdef _MAC_ADDRESS
   // get the host id portion of an ipx address
@@ -821,7 +812,7 @@ public:
    *
    * @return Pointer to the newly created object (allocated through new).
    */
-  SnmpSyntax *clone() const { return (SnmpSyntax *) new IpxAddress(*this); };
+  SnmpSyntax *clone() const { return (SnmpSyntax *) new IpxAddress(*this); }
 
   /**
    * Get a printable ASCII value of the address.
@@ -829,7 +820,7 @@ public:
    * @return String containing the numerical address
    */
   virtual const char *get_printable() const
-    { if (addr_changed) format_output(); return output_buffer; };
+    { if (addr_changed) format_output(); return output_buffer; }
 
   /**
    * Overloaded operator for streaming output.
@@ -837,25 +828,25 @@ public:
    * @return String containing the numerical address
    */
   virtual operator const char *() const
-    { if (addr_changed) format_output(); return output_buffer; };
+    { if (addr_changed) format_output(); return output_buffer; }
 
   /**
    * Get the length of the binary address (accessible through operator[]).
    */
-  virtual int get_length() const { return IPXLEN; };
+  virtual int get_length() const { return IPXLEN; }
 
   /**
    * Return the type of the address.
    * @see Address::addr_type
    * @return Always Address:type_ipx
    */
-  virtual addr_type get_type() const { return type_ipx; };
+  virtual addr_type get_type() const { return type_ipx; }
 
   /**
    * Reset the object.
    */
   void clear()
-    { Address::clear(); memset(output_buffer, 0, sizeof(output_buffer)); };
+    { Address::clear(); memset(output_buffer, 0, sizeof(output_buffer)); }
 
  protected:
   // ipx format separator
@@ -896,30 +887,31 @@ public:
   IpxSockAddress(const IpxAddress &ipxaddr);
 
   // destructor
-  ~IpxSockAddress() {};
+  ~IpxSockAddress() {}
 
   // syntax type
-  //virtual SmiUINT32 get_syntax() const { return sNMP_SYNTAX_OCTETS; };
+  //virtual SmiUINT32 get_syntax() const { return sNMP_SYNTAX_OCTETS; }
 
   /**
    * Return the space needed for serialization.
    */
-  virtual int get_asn1_length() const { return IPXSOCKLEN + 2; };
+  virtual int get_asn1_length() const { return IPXSOCKLEN + 2; }
 
+  using IpxAddress::operator =;
   /**
    * Map other SnmpSyntax objects to IpxSockAddress.
    */
-  SnmpSyntax& operator=(const SnmpSyntax &val);
+  virtual SnmpSyntax& operator=(const SnmpSyntax &val);
 
   // assignment to another IpAddress object overloaded
-  IpxSockAddress& operator=(const IpxSockAddress &ipxaddr);
+  virtual IpxSockAddress& operator=(const IpxSockAddress &ipxaddr);
 
   /**
    * Clone this object.
    *
    * @return Pointer to the newly created object (allocated through new).
    */
-  SnmpSyntax *clone() const { return (SnmpSyntax *)new IpxSockAddress(*this); };
+  SnmpSyntax *clone() const { return (SnmpSyntax *)new IpxSockAddress(*this); }
 
   // set the socket number
   void set_socket(const unsigned short s);
@@ -933,7 +925,7 @@ public:
    * @return String containing the numerical address
    */
   virtual const char *get_printable() const
-    { if (addr_changed) format_output(); return output_buffer; };
+    { if (addr_changed) format_output(); return output_buffer; }
 
   /**
    * Overloaded operator for streaming output.
@@ -941,25 +933,25 @@ public:
    * @return String containing the numerical address
    */
   virtual operator const char *() const
-    { if (addr_changed) format_output(); return output_buffer; };
+    { if (addr_changed) format_output(); return output_buffer; }
 
   /**
    * Get the length of the binary address (accessible through operator[]).
    */
-  virtual int get_length() const { return IPXSOCKLEN; };
+  virtual int get_length() const { return IPXSOCKLEN; }
 
   /**
    * Return the type of the address.
    * @see Address::addr_type
    * @return Always Address:type_ipxsock
    */
-  virtual addr_type get_type() const { return type_ipxsock; };
+  virtual addr_type get_type() const { return type_ipxsock; }
 
   /**
    * Reset the object.
    */
   void clear()
-    { Address::clear(); memset(output_buffer, 0, sizeof(output_buffer)); };
+    { Address::clear(); memset(output_buffer, 0, sizeof(output_buffer)); }
 
  protected:
   SNMP_PP_MUTABLE char output_buffer[OUTBUFF];           // output buffer
@@ -1017,7 +1009,7 @@ class DLLOPT GenAddress : public Address
   /**
    * Destructor, free memory.
    */
-  ~GenAddress() { if (address) delete address; };
+  ~GenAddress() { if (address) delete address; }
 
   /**
    * Return the syntax.
@@ -1027,35 +1019,36 @@ class DLLOPT GenAddress : public Address
    *         an address object.
    */
   SmiUINT32 get_syntax() const
-    { return address ? address->get_syntax() : sNMP_SYNTAX_NULL; };
+    { return address ? address->get_syntax() : sNMP_SYNTAX_NULL; }
 
   /**
    * Return the space needed for serialization.
    */
   virtual int get_asn1_length() const
-    { return address ? address->get_asn1_length() : 2; };
+    { return address ? address->get_asn1_length() : 2; }
 
   /**
    * Clone this object.
    *
    * @return Pointer to the newly created object (allocated through new).
    */
-  SnmpSyntax *clone() const { return (SnmpSyntax *)new GenAddress(*this); };
+  SnmpSyntax *clone() const { return (SnmpSyntax *)new GenAddress(*this); }
 
+  using Address::operator =;
   /**
    * Overloaded assignment operator for a GenAddress.
    */
-  GenAddress& operator=(const GenAddress &addr);
+  virtual GenAddress& operator=(const GenAddress &addr);
 
   /**
    * Overloaded assignment operator for a Address.
    */
-  GenAddress& operator=(const Address &addr);
+  virtual Address& operator=(const Address &addr);
 
   /**
    * Map other SnmpSyntax objects to GenAddress.
    */
-  SnmpSyntax& operator=(const SnmpSyntax &val);
+  virtual SnmpSyntax& operator=(const SnmpSyntax &val);
 
   /**
    * Get a printable ASCII value of the address.
@@ -1063,7 +1056,7 @@ class DLLOPT GenAddress : public Address
    * @return String containing the numerical address
    */
   virtual const char *get_printable() const
-    { return (address) ? address->get_printable() : output_buffer; };
+    { return (address) ? address->get_printable() : output_buffer; }
 
   /**
    * Overloaded operator for streaming output.
@@ -1071,18 +1064,18 @@ class DLLOPT GenAddress : public Address
    * @return String containing the numerical address
    */
   virtual operator const char *() const
-    { return address ? (const char *)*address : output_buffer; };
+    { return address ? (const char *)*address : output_buffer; }
 
   /**
    * Get the length of the binary address (accessible through operator[]).
    */
   virtual int get_length() const
-    { return (address) ? address->get_length() : 0; };
+    { return (address) ? address->get_length() : 0; }
 
   /**
    * Reset the object.
    */
-  void clear() { if (address) address->clear(); };
+  void clear() { if (address) address->clear(); }
 
   /**
    * Return the type of the address.
@@ -1091,21 +1084,21 @@ class DLLOPT GenAddress : public Address
    *         if it is not valid().
    */
   virtual addr_type get_type() const
-    { return (valid()) ? address->get_type() : type_invalid; };
+    { return (valid()) ? address->get_type() : type_invalid; }
 
   /**
    * Access the protected address.
    * The caller must make sure that this GenAddress object ist valid()
    * and is of the right type (get_type()).
    */
-  const IpAddress  &cast_ipaddress()  const { return (IpAddress& )*address; };
+  const IpAddress  &cast_ipaddress()  const { return (IpAddress& )*address; }
 
   /**
    * Access the protected address.
    * The caller must make sure that this GenAddress object ist valid()
    * and is of the right type (get_type()).
    */
-  const UdpAddress &cast_udpaddress() const { return (UdpAddress&)*address; };
+  const UdpAddress &cast_udpaddress() const { return (UdpAddress&)*address; }
 
 #ifdef _MAC_ADDRESS
   /**
@@ -1113,7 +1106,7 @@ class DLLOPT GenAddress : public Address
    * The caller must make sure that this GenAddress object ist valid()
    * and is of the right type (get_type()).
    */
-  const MacAddress &cast_macaddress() const { return (MacAddress&)*address; };
+  const MacAddress &cast_macaddress() const { return (MacAddress&)*address; }
 #endif
 
 #ifdef _IPX_ADDRESS
@@ -1122,7 +1115,7 @@ class DLLOPT GenAddress : public Address
    * The caller must make sure that this GenAddress object ist valid()
    * and is of the right type (get_type()).
    */
-  const IpxAddress &cast_ipxaddress() const { return (IpxAddress&)*address; };
+  const IpxAddress &cast_ipxaddress() const { return (IpxAddress&)*address; }
 
   /**
    * Access the protected address.
@@ -1130,7 +1123,7 @@ class DLLOPT GenAddress : public Address
    * and is of the right type (get_type()).
    */
   const IpxSockAddress &cast_ipxsockaddress() const
-    { return (IpxSockAddress&)*address; };
+    { return (IpxSockAddress&)*address; }
 #endif
 
 protected:
@@ -1140,18 +1133,18 @@ protected:
 
   // redefined parse address for generic address
   virtual bool parse_address(const char *addr)
-    { return parse_address(addr, Address::type_invalid); };
+    { return parse_address(addr, Address::type_invalid); }
 
   virtual bool parse_address(const char *addr,
 			     const Address::addr_type use_type);
 
   // format output for a generic address
-  virtual void format_output() const {};
+  virtual void format_output() const {}
 
   /**
    * Is this a GenAddress object.
    */
-  virtual bool is_gen_address() const { return true; };
+  virtual bool is_gen_address() const { return true; }
 };
 
 // create AddressCollection type

@@ -2,9 +2,9 @@
   _## 
   _##  log.cpp  
   _##
-  _##  SNMP++v3.2.25
+  _##  SNMP++ v3.3
   _##  -----------------------------------------------
-  _##  Copyright (c) 2001-2010 Jochen Katz, Frank Fock
+  _##  Copyright (c) 2001-2013 Jochen Katz, Frank Fock
   _##
   _##  This software is based on SNMP++2.6 from Hewlett Packard:
   _##  
@@ -23,28 +23,12 @@
   _##  hereby grants a royalty-free license to any and all derivatives based
   _##  upon this software code base. 
   _##  
-  _##  Stuttgart, Germany, Thu Sep  2 00:07:47 CEST 2010 
-  _##  
   _##########################################################################*/
 
-#ifndef WIN32
-#include <unistd.h>
-#else
-#include <process.h>
-#endif
-#include <stdio.h>
-#include <stdlib.h>
-#include <time.h>
-#include <signal.h>
-#include <string.h>
+#include <libsnmp.h>
 
 #include <snmp_pp/log.h>
-
-#ifdef WIN32
-#ifdef __BCPLUSPLUS__
-#define _getpid getpid
-#endif
-#endif
+#include <snmp_pp/octet.h>
 
 #if defined (CPU) && CPU == PPC603
 #include <taskLib.h>
@@ -56,10 +40,54 @@ using namespace Snmp_pp;
 
 // default log filter: logs with level less or equal filter value are logged
 // error, warning, event, info, debug:
-static unsigned char default_logfilter[] = { 9, 9, 4, 6, 7, 15};
+#define LOG_DEFAULT_OFF      {  0, -1, -1, -1, -1, -1 }
+#define LOG_DEFAULT_QUIET    { 15, 15, -1, -1, -1, -1 }
+#define LOG_DEFAULT_STD      { 15, 15,  5, -1, -1, -1 }
+#define LOG_DEFAULT_EVENTS   { 15, 15, 15, -1, -1, -1 }
+#define LOG_DEFAULT_VERBOSE  { 15, 15, 15,  5, -1, -1 }
+#define LOG_DEFAULT_FULL     { 15, 15, 15, 15, -1, -1 }
+#define LOG_DEFAULT_DEBUG    { 15, 15, 15, 15,  5, -1 }
+#define LOG_DEFAULT_ALL      { 15, 15, 15, 15, 15, 15 }
+#define LOG_DEFAULT_ORIGINAL {  9,  9,  4,  6,  7, 15 }
+
+#if defined(WITH_LOG_PROFILES)
+#include <map>
+
+using namespace std;
+
+static map<string, int *> logfilter_profiles;
+#endif
+static int default_logfilter[] = LOG_DEFAULT_ORIGINAL;
 
 #undef   LOG_INDENT
 
+/*---------------------------- log profiles ---------------------------*/
+
+#if defined(WITH_LOG_PROFILES)
+static void
+initLogProfiles()
+{
+    static int log_profile_off[6] = LOG_DEFAULT_OFF;
+    static int log_profile_quiet[6] = LOG_DEFAULT_QUIET;
+    static int log_profile_std[6] = LOG_DEFAULT_STD;
+    static int log_profile_events[6] = LOG_DEFAULT_EVENTS;
+    static int log_profile_verbose[6] = LOG_DEFAULT_VERBOSE;
+    static int log_profile_full[6] = LOG_DEFAULT_FULL;
+    static int log_profile_debug[6] = LOG_DEFAULT_DEBUG;
+    static int log_profile_all[6] = LOG_DEFAULT_ALL;
+    static int log_profile_original[6] = LOG_DEFAULT_ORIGINAL;
+
+    logfilter_profiles["off"] = log_profile_off;
+    logfilter_profiles["quiet"] = log_profile_quiet;
+    logfilter_profiles["std"] = log_profile_std;
+    logfilter_profiles["events"] = log_profile_events;
+    logfilter_profiles["verbose"] = log_profile_verbose;
+    logfilter_profiles["full"] = log_profile_full;
+    logfilter_profiles["debug"] = log_profile_debug;
+    logfilter_profiles["all"] = log_profile_all;
+    logfilter_profiles["original"] = log_profile_original;
+}
+#endif
 
 /*--------------------------- class LogEntry --------------------------*/
 
@@ -69,24 +97,35 @@ static unsigned char default_logfilter[] = { 9, 9, 4, 6, 7, 15};
   */  
 void LogEntry::init(void)
 {
-#ifdef WIN32
-	int pid = _getpid();
-#elif defined (CPU) && CPU == PPC603
-	int pid = taskIdSelf();
-#else
-	int pid = getpid();
-#endif
-
 	add_timestamp();
 	add_string(": ");
+
+#if defined (CPU) && CPU == PPC603
+	int pid = taskIdSelf();
+#else
+#ifdef POSIX_THREADS
+        pthread_t pid = pthread_self();
+        unsigned char *ptc = (unsigned char*)(void*)(&pid);
+        OctetStr os;
+        os.set_data(ptc, sizeof(ptc));
+        add_string(os.get_printable_hex());
+#else 
+#ifdef HAVE_GETPID        
+	pid_t pid = getpid();
+#else
+        int pid = 0;
+#endif 
 	add_integer(pid);
+#endif        
+#endif
+
 	add_string(": ");
 
 	char buf[20];
 	sprintf(buf, "(%X)", get_level());
 	add_string(buf);
 
-	switch (type & 0xF0) {
+	switch (type & LOG_CLASS_MASK) {
 	case DEBUG_LOG:   add_string("DEBUG  : "); break;
 	case INFO_LOG:	  add_string("INFO   : "); break;
 	case WARNING_LOG: add_string("WARNING: "); break;
@@ -97,7 +136,7 @@ void LogEntry::init(void)
 
 #ifdef LOG_INDENT
 	// indent log by level
-	for (int i=0; i<(type & 0x0F); i++) 
+	for (int i=0; i<(type & LOG_LEVEL_MASK); i++) 
 		add_string(" ");
 #endif
 }
@@ -151,7 +190,7 @@ LogEntry& LogEntry::operator+=(const long l)
  * Add an integer to the log.
  *
  * @param s - An integer value.
- * @return TRUE if the value has been added and FALSE if the log
+ * @return true if the value has been added and false if the log
  *         entry is full.
  */
 bool LogEntry::add_integer(long l)
@@ -173,49 +212,30 @@ bool LogEntry::add_timestamp(void)
 /*------------------------- class LogEntryImpl ------------------------*/
 
 /**
- * Constructor for the standard log entry implementation.
- */  
-LogEntryImpl::LogEntryImpl(unsigned char t) : LogEntry(t)
-{
-	value = new char[MAX_LOG_SIZE];
-        value[0] = '\0';
-	ptr = value;
-	output_stopped = FALSE;
-}
-
-/**
- * Destructor for the standard log entry implementation.
- */  
-LogEntryImpl::~LogEntryImpl()
-{
-	delete [] value;
-}
-
-/**
  * Add a string to the log.
  *
  * @param s - A string value.
- * @return TRUE if the value has been added and FALSE if the log
+ * @return true if the value has been added and false if the log
  *         entry is full.
  */
 bool LogEntryImpl::add_string(const char* s)
 {
 	if (output_stopped)
-		return FALSE;
+		return false;
 
 	size_t len = strlen(s);
 	if (len <= bytes_left()) {
 		strcat(ptr, s);
 		ptr += len;
-		return TRUE;
+		return true;
 	}
 
 	if (bytes_left() >= 3) {
 		strcat(ptr, "...");
 		ptr += 3;
 	}
-	output_stopped = TRUE;
-	return FALSE;
+	output_stopped = true;
+	return false;
 }	
 
 
@@ -226,14 +246,39 @@ bool LogEntryImpl::add_string(const char* s)
  */
 AgentLog::AgentLog()
 {
+        int *log_profile;
+#if defined(WITH_LOG_PROFILES) && defined(DEFAULT_LOG_PROFILE)
+        map<string, int *>::const_iterator item = logfilter_profiles.find(DEFAULT_LOG_PROFILE);
+        if( item != logfilter_profiles.end() )
+                log_profile = item->second;
+        else
+#endif
+                log_profile = default_logfilter;
+
 	for (int i=0; i<LOG_TYPES; i++)
-		logfilter[i] = default_logfilter[i];
+		logfilter[i] = log_profile[i];
 }
+
+#if defined(WITH_LOG_PROFILES)
+void
+AgentLog::set_profile(const char * const logprofile)
+{
+        int *log_profile;
+        map<string, int *>::const_iterator item = logfilter_profiles.find(logprofile);
+        if( item != logfilter_profiles.end() )
+                log_profile = item->second;
+        else
+                log_profile = default_logfilter;
+
+	for (int i=0; i<LOG_TYPES; i++)
+		logfilter[i] = log_profile[i];
+}
+#endif
 
 void AgentLog::set_filter(int logclass, unsigned char filter)
 { 
 	int idx = (logclass/16)-1;
-	if ((idx >=0) && (idx < LOG_TYPES) && (filter<16)) 
+	if ((idx >=0) && (idx < LOG_TYPES) && ((filter<16)||(filter==0xFF)))
 		logfilter[idx] = filter; 
 }
 
@@ -304,7 +349,7 @@ AgentLogImpl::~AgentLogImpl()
  */
 void AgentLogImpl::set_dest(const char* fname)
 {
-	close_needed = FALSE;
+	close_needed = false;
 	if ((!fname) || (strlen(fname) == 0)) 
 		logfile = stdout;
 	else {
@@ -312,7 +357,7 @@ void AgentLogImpl::set_dest(const char* fname)
 		if (logfile == NULL)
 			logfile = stdout;
 		else
-			close_needed = TRUE;
+			close_needed = true;
 	}
 }
 
@@ -324,18 +369,19 @@ void AgentLogImpl::set_dest(const char* fname)
 void AgentLogImpl::set_dest(FILE* fp)
 {
 	logfile = fp ? fp : stdout;
-	close_needed = FALSE;
+	close_needed = false;
 }
 
 /**
  * Create a new LogEntry.
  *
+ * @param name - The name of the logging module
  * @param t - The type of the log entry.
  * @return A new instance of LogEntry (or of a derived class).
  */
-LogEntry* AgentLogImpl::create_log_entry(unsigned char t) const
+LogEntry* AgentLogImpl::create_log_entry(const char * const name, unsigned char t) const
 {
-	return new LogEntryImpl(t);
+	return new LogEntryImpl(name, t);
 }
 
 /**
@@ -359,52 +405,41 @@ AgentLog& AgentLogImpl::operator+=(const LogEntry* log)
 }
 
 
-// define the default logs
+/*------------------------ class DefaultLog -------------------------*/
 
-#ifdef _THREADS
-#ifndef _WIN32THREADS
-#if !(defined (CPU) && CPU == PPC603)
-pthread_mutex_t logmutex = PTHREAD_MUTEX_INITIALIZER;
-#endif
-#endif
-#endif
+// define the default logs
 
 AgentLog* DefaultLog::instance = 0;
 LogEntry* DefaultLog::entry = 0;
+#ifdef _THREADS
 SnmpSynchronized DefaultLog::mutex;
-
-/*------------------------ class DefaultLog -------------------------*/
+#endif
 
 void DefaultLog::cleanup() 
 {
-  mutex.lock(); 
+  lock(); 
   if (instance) delete instance; 
   instance = 0; 
-  mutex.unlock();
+  unlock();
 }
 
 AgentLog* DefaultLog::init_ts(AgentLog* logger)
 { 
-  AgentLog* r = instance;
-  if (!instance) { 
-    mutex.lock(); 
+  AgentLog* r;
+  if (!( r = instance)) {
+    lock();
     if (!instance) { 
+#ifdef WITH_LOG_PROFILES
+#ifdef DEFAULT_LOG_PROFILE
+      initLogProfiles();
+#endif
+#endif
+      if(!logger)
+	logger = new AgentLogImpl();
       instance = logger;
       r = instance;
     } 
-    mutex.unlock(); 
-  }
-  return r;
-}
-
-AgentLog* DefaultLog::log() 
-{ 
-  AgentLog* r = instance;
-  if (!r) {
-    r = new AgentLogImpl();
-    AgentLog* l = init_ts(r);
-    if (r != l) delete r;
-    r = l;
+    unlock();
   } 
   return r; 
 }

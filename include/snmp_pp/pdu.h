@@ -2,9 +2,9 @@
   _## 
   _##  pdu.h  
   _##
-  _##  SNMP++v3.2.25
+  _##  SNMP++ v3.3
   _##  -----------------------------------------------
-  _##  Copyright (c) 2001-2010 Jochen Katz, Frank Fock
+  _##  Copyright (c) 2001-2013 Jochen Katz, Frank Fock
   _##
   _##  This software is based on SNMP++2.6 from Hewlett Packard:
   _##  
@@ -22,8 +22,6 @@
   _##  "AS-IS" without warranty of any kind, either express or implied. User 
   _##  hereby grants a royalty-free license to any and all derivatives based
   _##  upon this software code base. 
-  _##  
-  _##  Stuttgart, Germany, Thu Sep  2 00:07:47 CEST 2010 
   _##  
   _##########################################################################*/
 /*===================================================================
@@ -54,7 +52,7 @@
   Data Unit (PDU) in C++.
 
 =====================================================================*/
-// $Id: pdu.h 288 2007-03-22 22:37:09Z katz $
+// $Id: pdu.h 2359 2013-05-09 20:07:01Z fock $
 
 #ifndef _PDU_CLS
 #define _PDU_CLS
@@ -164,7 +162,7 @@ class DLLOPT Pdu
    *
    * @return TRUE on success
    */
-  int set_vblist(Vb* pvbs, const int pvb_count);
+  int set_vblist(Vb const * pvbs, const int pvb_count);
 
   /**
    * Get a particular Vb.
@@ -197,7 +195,7 @@ class DLLOPT Pdu
    *
    * @return TRUE on success
    */
-  int set_vb(Vb &vb, const int index);
+  int set_vb(Vb const &vb, const int index);
 
   /**
    * Get the number of vbs.

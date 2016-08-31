@@ -2,9 +2,9 @@
   _## 
   _##  msgqueue.h  
   _##
-  _##  SNMP++v3.2.25
+  _##  SNMP++ v3.3
   _##  -----------------------------------------------
-  _##  Copyright (c) 2001-2010 Jochen Katz, Frank Fock
+  _##  Copyright (c) 2001-2013 Jochen Katz, Frank Fock
   _##
   _##  This software is based on SNMP++2.6 from Hewlett Packard:
   _##  
@@ -22,8 +22,6 @@
   _##  "AS-IS" without warranty of any kind, either express or implied. User 
   _##  hereby grants a royalty-free license to any and all derivatives based
   _##  upon this software code base. 
-  _##  
-  _##  Stuttgart, Germany, Thu Sep  2 00:07:47 CEST 2010 
   _##  
   _##########################################################################*/
 /*===================================================================
@@ -58,7 +56,7 @@
 	Queue for holing SNMP event sources (outstanding snmp messages)
 
 =====================================================================*/
-// $Id: msgqueue.h 1541 2009-05-29 11:29:22Z katz $
+// $Id: msgqueue.h 2359 2013-05-09 20:07:01Z fock $
 
 #ifndef _MSGQUEUE
 #define _MSGQUEUE
@@ -125,6 +123,8 @@ class DLLOPT CSNMPMessage
   int ResendMessage();
   int Callback(const int reason);
   SnmpTarget *GetTarget() { return m_target; };
+  bool IsLocked() const { return m_locked; };
+  void SetLocked(const bool l) { m_locked = l; };
 
  protected:
 
@@ -141,6 +141,7 @@ class DLLOPT CSNMPMessage
   void *	  m_callData;
   int		  m_reason;
   int		  m_received;
+  bool            m_locked;
 };
 
   /*-----------------------------------------------------------*/
