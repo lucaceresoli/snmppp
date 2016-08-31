@@ -2,9 +2,9 @@
   _## 
   _##  oid.cpp  
   _##
-  _##  SNMP++v3.2.24
+  _##  SNMP++v3.2.25
   _##  -----------------------------------------------
-  _##  Copyright (c) 2001-2009 Jochen Katz, Frank Fock
+  _##  Copyright (c) 2001-2010 Jochen Katz, Frank Fock
   _##
   _##  This software is based on SNMP++2.6 from Hewlett Packard:
   _##  
@@ -23,7 +23,7 @@
   _##  hereby grants a royalty-free license to any and all derivatives based
   _##  upon this software code base. 
   _##  
-  _##  Stuttgart, Germany, Fri May 29 22:35:14 CEST 2009 
+  _##  Stuttgart, Germany, Thu Sep  2 00:07:47 CEST 2010 
   _##  
   _##########################################################################*/
 /*===================================================================
@@ -53,7 +53,7 @@
   includes all protected and public member functions. The oid class
   may be compiled stand alone without the use of any other library.
 =====================================================================*/
-char oid_cpp_version[]="#(@) SNMP++ $Id: oid.cpp 1542 2009-05-29 11:38:48Z katz $";
+char oid_cpp_version[]="#(@) SNMP++ $Id: oid.cpp 1742 2010-04-29 19:08:54Z katz $";
 
 //---------[ external C libaries used ]--------------------------------
 #include <stdio.h>                // standard io
@@ -155,19 +155,6 @@ Oid::Oid(const unsigned long *raw_oid, int oid_len)
     }
   }
 }
-
-#if 0
-// Constructor from standard C string array.
-Oid::Oid(const char *str, const unsigned int str_len)
-  : iv_str(0), iv_part_str(0), m_changed(true)
-{
-  smival.syntax = sNMP_SYNTAX_OID;
-  smival.value.oid.len = 0;
-  smival.value.oid.ptr = 0;
-
-  set_data(str, str_len);
-}
-#endif
 
 //=============[Oid::~Oid]==============================================
 Oid::~Oid()

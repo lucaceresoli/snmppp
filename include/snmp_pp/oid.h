@@ -2,9 +2,9 @@
   _## 
   _##  oid.h  
   _##
-  _##  SNMP++v3.2.24
+  _##  SNMP++v3.2.25
   _##  -----------------------------------------------
-  _##  Copyright (c) 2001-2009 Jochen Katz, Frank Fock
+  _##  Copyright (c) 2001-2010 Jochen Katz, Frank Fock
   _##
   _##  This software is based on SNMP++2.6 from Hewlett Packard:
   _##  
@@ -23,7 +23,7 @@
   _##  hereby grants a royalty-free license to any and all derivatives based
   _##  upon this software code base. 
   _##  
-  _##  Stuttgart, Germany, Fri May 29 22:35:14 CEST 2009 
+  _##  Stuttgart, Germany, Thu Sep  2 00:07:47 CEST 2010 
   _##  
   _##########################################################################*/
 /*===================================================================
@@ -55,7 +55,7 @@
   which supports C++.
 
 =====================================================================*/
-// $Id: oid.h 1541 2009-05-29 11:29:22Z katz $
+// $Id: oid.h 1775 2010-07-11 09:59:28Z katz $
 
 #ifndef _OID_H_
 #define _OID_H_
@@ -132,18 +132,6 @@ class DLLOPT Oid : public SnmpSyntax
    * @param oid_len - length of array
    */
   Oid(const unsigned long *raw_oid, int oid_len);
-
-#if 0 // can be done through Oid o; o.set_data("public", 6); 
-  /**
-   * Constructor from standard C string array.
-   *
-   * @note This constructor does not take a dotted oid string as argument.
-   *
-   * @param str     - Array of new values (a string)
-   * @param str_len - Length of the array raw_oid
-   */
-  Oid(const char *str, const unsigned int str_len);
-#endif
 
   /**
    * Destructor.

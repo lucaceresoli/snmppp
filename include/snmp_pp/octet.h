@@ -2,9 +2,9 @@
   _## 
   _##  octet.h  
   _##
-  _##  SNMP++v3.2.24
+  _##  SNMP++v3.2.25
   _##  -----------------------------------------------
-  _##  Copyright (c) 2001-2009 Jochen Katz, Frank Fock
+  _##  Copyright (c) 2001-2010 Jochen Katz, Frank Fock
   _##
   _##  This software is based on SNMP++2.6 from Hewlett Packard:
   _##  
@@ -23,7 +23,7 @@
   _##  hereby grants a royalty-free license to any and all derivatives based
   _##  upon this software code base. 
   _##  
-  _##  Stuttgart, Germany, Fri May 29 22:35:14 CEST 2009 
+  _##  Stuttgart, Germany, Thu Sep  2 00:07:47 CEST 2010 
   _##  
   _##########################################################################*/
 /*===================================================================
@@ -54,7 +54,7 @@
   SNMP libraries. This class is portable across any platform
   which supports C++.
 =====================================================================*/
-// $Id: octet.h 1541 2009-05-29 11:29:22Z katz $
+// $Id: octet.h 1824 2010-08-29 19:47:08Z katz $
 
 #ifndef _OCTET_CLS
 #define _OCTET_CLS
@@ -354,7 +354,7 @@ class DLLOPT OctetStr: public  SnmpSyntax
    * @param new_len - The new length for the string
    * @return true on success
    */
-  bool set_len(const unsigned char new_len);
+  bool set_len(const unsigned long new_len);
 
  protected:
 
