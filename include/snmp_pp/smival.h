@@ -59,6 +59,7 @@
 #define _SMIVALUE
 
 //----[ includes ]-----------------------------------------------------
+#include <string.h>
 #include "snmp_pp/smi.h"
 
 #ifdef SNMP_PP_NAMESPACE
