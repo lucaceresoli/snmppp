@@ -51,11 +51,12 @@
   Class definition for Integer classes.
 
 =====================================================================*/
-// $Id: integer.h 2359 2013-05-09 20:07:01Z fock $
+// $Id: integer.h 3169 2016-09-26 20:45:41Z katz $
 
-#ifndef _SNMPINTEGER
-#define _SNMPINTEGER
+#ifndef _SNMP_INTEGER_H_
+#define _SNMP_INTEGER_H_
 
+#include <libsnmp.h>
 #include "snmp_pp/smival.h"
 
 #ifdef SNMP_PP_NAMESPACE
@@ -84,9 +85,7 @@ class DLLOPT SnmpUInt32 : public SnmpSyntax
    * @param i - initial value
    */
   SnmpUInt32(const unsigned long i = 0)
-    : SnmpSyntax()
-    , valid_flag(true)
-    , m_changed(true)
+    : SnmpSyntax(), valid_flag(true), m_changed(true)
   {
     smival.value.uNumber = i;
     smival.syntax = sNMP_SYNTAX_UINT32;
@@ -98,9 +97,7 @@ class DLLOPT SnmpUInt32 : public SnmpSyntax
    * @param c - initial value
    */
   SnmpUInt32(const SnmpUInt32 &c)
-    : SnmpSyntax()
-    , valid_flag(c.valid_flag)
-    , m_changed(true)
+    : SnmpSyntax(), valid_flag(c.valid_flag), m_changed(true)
   {
     smival.value.uNumber = c.smival.value.uNumber;
     smival.syntax = sNMP_SYNTAX_UINT32;
@@ -205,12 +202,6 @@ class DLLOPT SnmpUInt32 : public SnmpSyntax
 class DLLOPT SnmpInt32 : public SnmpSyntax
 {
  public:
-#if 0
-  /**
-   * Constructor, sets value to zero.
-   */
-  SnmpInt32();
-#endif
 
   /**
    * Constructor with value.
@@ -218,9 +209,7 @@ class DLLOPT SnmpInt32 : public SnmpSyntax
    * @param i - initial value
    */
   SnmpInt32 (const long i = 0)
-    : SnmpSyntax()
-    , valid_flag(true)
-    , m_changed(true)
+    : SnmpSyntax(), valid_flag(true), m_changed(true)
   {
     smival.value.sNumber = i;
     smival.syntax = sNMP_SYNTAX_INT32;
@@ -232,9 +221,7 @@ class DLLOPT SnmpInt32 : public SnmpSyntax
    * @param c - initial value
    */
   SnmpInt32 (const SnmpInt32 &c)
-    : SnmpSyntax()
-    , valid_flag(c.valid_flag)
-    , m_changed(true)
+    : SnmpSyntax(), valid_flag(c.valid_flag), m_changed(true)
   {
     smival.value.sNumber = c.smival.value.sNumber;
     smival.syntax = sNMP_SYNTAX_INT32;
@@ -335,4 +322,4 @@ class DLLOPT SnmpInt32 : public SnmpSyntax
 } // end of namespace Snmp_pp
 #endif 
 
-#endif
+#endif // _SNMP_INTEGER_H_

@@ -1,3 +1,21 @@
+Changes snmp++v3.3.8
+====================
+
+- Security: A buffer overflow could be triggered in Ipaddress class if a
+  host name was longer than 80 characters. The overflow was triggered
+  when a too long host name was passed to the class or if a DNS reverse
+  lookup returned a too long host name.
+- Fixed: It was not possible to assign a numeric IPv4 address to the IpAddress
+  class if IPv4 was disabled at OS level. The same was true for IPv6 addresses
+  if IPv6 was disabled at OS level. Parsing of variable bindings containing
+  an IP address failed in such configurations.
+- Fixed: Compilation without OpenSSL and without libtomcrypt was not possible.
+- Changed: Use newer DES API of OpenSSL.
+- Fixed: Installed header files no longer need the internal config.h.
+- Fixed: Invalid use of static_cast in log.cpp on MacOS.
+- Fixed: SNMPv3 requests always resulted in an unknown engine id report, if
+  the used SnmpTarget did not contain any port information.
+
 Changes snmp++v3.3.7
 ====================
 

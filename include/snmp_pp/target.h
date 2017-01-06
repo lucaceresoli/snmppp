@@ -51,13 +51,14 @@
   Target class defines target SNMP agents.
 
 =====================================================================*/
-// $Id: target.h 2359 2013-05-09 20:07:01Z fock $
+// $Id: target.h 3164 2016-09-23 21:30:38Z katz $
 
-#ifndef _TARGET
-#define _TARGET
+#ifndef _SNMP_TARGET_H_
+#define _SNMP_TARGET_H_
 
 //----[ includes ]-----------------------------------------------------
 
+#include <libsnmp.h>
 #include "snmp_pp/config_snmp_pp.h"
 #include "snmp_pp/address.h"
 #include "snmp_pp/octet.h"
@@ -663,4 +664,4 @@ class DLLOPT UTarget: public SnmpTarget
 } // end of namespace Snmp_pp
 #endif 
 
-#endif //_TARGET
+#endif // _SNMP_TARGET_H_

@@ -51,11 +51,12 @@
   Class definition for SMI Timeticks class.
 
 =====================================================================*/
-// $Id: timetick.h 2359 2013-05-09 20:07:01Z fock $
+// $Id: timetick.h 3169 2016-09-26 20:45:41Z katz $
 
-#ifndef _TIMETICKS
-#define _TIMETICKS
+#ifndef _SNMP_TIMETICK_H_
+#define _SNMP_TIMETICK_H_
 
+#include <libsnmp.h>
 #include "snmp_pp/integer.h"
 
 #ifdef SNMP_PP_NAMESPACE
@@ -73,13 +74,6 @@ namespace Snmp_pp {
 class DLLOPT TimeTicks : public SnmpUInt32
 {
  public:
-#if 0
-  /**
-   * Constructs a zero TimeTicks object.
-   */
-  TimeTicks() : SnmpUInt32()
-    { smival.syntax = sNMP_SYNTAX_TIMETICKS; };
-#endif
 
   /**
    * Constructs a TimeTicks object with the given value.
@@ -158,21 +152,6 @@ class DLLOPT TimeTicks : public SnmpUInt32
     return *this;
   }
 
-#if 0
-  // XXX this operator is already provided by SnmpUInt32
-  /**
-   * Casting to unsigned long.
-   *
-   * @return Current value as hundrets of seconds
-   */
-  operator unsigned long() { return smival.value.uNumber; };
-
-  /**
-   * Reset the object.
-   */
-  void clear()
-    { smival.value.uNumber = 0; m_changed = true; };
-#endif
  protected:
   SNMP_PP_MUTABLE char output_buffer[TICKOUTBUF];  // for storing printed form
 };
@@ -181,4 +160,4 @@ class DLLOPT TimeTicks : public SnmpUInt32
 } // end of namespace Snmp_pp
 #endif 
 
-#endif
+#endif // _SNMP_TIMETICK_H_

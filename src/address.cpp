@@ -1,28 +1,28 @@
 /*_############################################################################
-  _## 
-  _##  address.cpp  
+  _##
+  _##  address.cpp
   _##
   _##  SNMP++ v3.3
   _##  -----------------------------------------------
   _##  Copyright (c) 2001-2013 Jochen Katz, Frank Fock
   _##
   _##  This software is based on SNMP++2.6 from Hewlett Packard:
-  _##  
+  _##
   _##    Copyright (c) 1996
   _##    Hewlett-Packard Company
-  _##  
+  _##
   _##  ATTENTION: USE OF THIS SOFTWARE IS SUBJECT TO THE FOLLOWING TERMS.
-  _##  Permission to use, copy, modify, distribute and/or sell this software 
-  _##  and/or its documentation is hereby granted without fee. User agrees 
-  _##  to display the above copyright notice and this license notice in all 
-  _##  copies of the software and any documentation of the software. User 
-  _##  agrees to assume all liability for the use of the software; 
-  _##  Hewlett-Packard and Jochen Katz make no representations about the 
-  _##  suitability of this software for any purpose. It is provided 
-  _##  "AS-IS" without warranty of any kind, either express or implied. User 
+  _##  Permission to use, copy, modify, distribute and/or sell this software
+  _##  and/or its documentation is hereby granted without fee. User agrees
+  _##  to display the above copyright notice and this license notice in all
+  _##  copies of the software and any documentation of the software. User
+  _##  agrees to assume all liability for the use of the software;
+  _##  Hewlett-Packard and Jochen Katz make no representations about the
+  _##  suitability of this software for any purpose. It is provided
+  _##  "AS-IS" without warranty of any kind, either express or implied. User
   _##  hereby grants a royalty-free license to any and all derivatives based
-  _##  upon this software code base. 
-  _##  
+  _##  upon this software code base.
+  _##
   _##########################################################################*/
 /*===================================================================
 
@@ -48,7 +48,7 @@
 
   DESCRIPTION:      Implementation file for Address classes.
 =====================================================================*/
-char address_cpp_version[]="@(#) SNMP++ $Id: address.cpp 3031 2016-02-26 20:37:46Z katz $";
+char address_cpp_version[]="@(#) SNMP++ $Id: address.cpp 3181 2016-10-24 20:38:57Z katz $";
 
 #include <libsnmp.h>
 
@@ -234,7 +234,7 @@ int operator<=(const Address &lhs, const char *rhs)
 
 //-------[ construct an IP address with no agrs ]----------------------
 IpAddress::IpAddress()
-  : Address(), iv_friendly_name_status(0), ip_version(version_ipv4)
+  : Address(), iv_friendly_name_status(0), ip_version(version_ipv4), have_ipv6_scope(false)
 {
   ADDRESS_TRACE;
 
@@ -242,8 +242,6 @@ IpAddress::IpAddress()
   smival.syntax = sNMP_SYNTAX_IPADDR;
   smival.value.string.len = IPLEN;
   smival.value.string.ptr = address_buffer;
-
-  memset(iv_friendly_name, 0, sizeof(char) * MAX_FRIENDLY_NAME);
 }
 
 //-------[ construct an IP address with a string ]---------------------
@@ -273,14 +271,13 @@ IpAddress::IpAddress(const IpAddress &ipaddr)
   smival.value.string.len = ipaddr.smival.value.string.len;
   smival.value.string.ptr = address_buffer;
 
-  memset(iv_friendly_name, 0, sizeof(char) * MAX_FRIENDLY_NAME);
   valid_flag = ipaddr.valid_flag;
   if (valid_flag)
   {
     // copy the address data
     memcpy(address_buffer, ipaddr.address_buffer, smival.value.string.len);
     // and the friendly name
-    strcpy(iv_friendly_name, ipaddr.iv_friendly_name);
+    iv_friendly_name = ipaddr.iv_friendly_name;
 
     if (!ipaddr.addr_changed)
     {
@@ -302,7 +299,6 @@ IpAddress::IpAddress(const GenAddress &genaddr)
   smival.value.string.len = IPLEN;
   smival.value.string.ptr = address_buffer;
 
-  memset(iv_friendly_name, 0, sizeof(char) * MAX_FRIENDLY_NAME);
   output_buffer[0]=0;
 
   // allow use of an ip or udp genaddress
@@ -335,7 +331,7 @@ SnmpSyntax& IpAddress::operator=(const SnmpSyntax &val)
 
   addr_changed = true;
   valid_flag = false;        // will get set TRUE if really valid
-  memset(iv_friendly_name, 0, sizeof(char) * MAX_FRIENDLY_NAME);
+  iv_friendly_name.clear();
 
   if (val.valid())
   {
@@ -389,7 +385,7 @@ Address& IpAddress::operator=(const Address &val)
 
   addr_changed = true;
   valid_flag = false;        // will get set TRUE if really valid
-  memset(iv_friendly_name, 0, sizeof(char) * MAX_FRIENDLY_NAME);
+  iv_friendly_name.clear();
 
   if (val.valid())
   {
@@ -442,7 +438,7 @@ IpAddress& IpAddress::operator=(const IpAddress &ipaddr)
   if (this == &ipaddr) return *this; // protect against assignment from itself
 
   valid_flag = ipaddr.valid_flag;
-  memset(iv_friendly_name, 0, sizeof(char) * MAX_FRIENDLY_NAME);
+  iv_friendly_name.clear();
 
   if (valid_flag)
   {
@@ -469,7 +465,7 @@ IpAddress& IpAddress::operator=(const IpAddress &ipaddr)
         have_ipv6_scope = false;
       }
     }
-    strcpy(iv_friendly_name, ipaddr.iv_friendly_name);
+    iv_friendly_name = ipaddr.iv_friendly_name;
 
     if (ipaddr.addr_changed)
       addr_changed = true;
@@ -486,14 +482,14 @@ IpAddress& IpAddress::operator=(const IpAddress &ipaddr)
 }
 
 //-------[ return the friendly name ]----------------------------------
-char *IpAddress::friendly_name(int &status)
+const char *IpAddress::friendly_name(int &status)
 {
   ADDRESS_TRACE;
 
-  if ((iv_friendly_name[0]==0) && (valid_flag))
+  if ((iv_friendly_name.length() == 0) && (valid_flag))
     this->addr_to_friendly();
   status = iv_friendly_name_status;
-  return iv_friendly_name;
+  return iv_friendly_name.c_str();
 }
 
 // Clone as OctetStr (binary string)
@@ -840,6 +836,16 @@ bool IpAddress::parse_address(const char *inaddr)
 
   addr_changed = true;
 
+  // initialize the friendly_name member variable
+  iv_friendly_name.clear();
+  iv_friendly_name_status = 0;
+
+  // is this a dotted IP notation string or a friendly name
+  if (parse_dotted_ipstring(inaddr))
+    return true; // since this is a valid dotted string don't do any DNS
+  else if (parse_coloned_ipstring(inaddr))
+    return true; // since this is a valid ipv6 string don't do any DNS
+
 #ifdef HAVE_GETADDRINFO
   struct addrinfo hints, *res = 0;
   int error;
@@ -900,8 +906,8 @@ bool IpAddress::parse_address(const char *inaddr)
     freeaddrinfo(res);
     iv_friendly_name_status = 0;
     // save the friendly name
-    strcpy(iv_friendly_name, inaddr);
-        
+    iv_friendly_name = inaddr;
+
     return true;
   }         // end if lookup result
 
@@ -917,23 +923,6 @@ bool IpAddress::parse_address(const char *inaddr)
 
   char ds[61];
 
-  // intialize the friendly_name member variable
-  memset(iv_friendly_name, 0, sizeof(char) * MAX_FRIENDLY_NAME);
-  iv_friendly_name_status = 0;
-
-  // is this a dotted IP notation string or a friendly name
-  if (parse_dotted_ipstring(inaddr))
-  {
-    // since this is a valid dotted string don't do any DNS
-    return true;
-  }
-  else if (parse_coloned_ipstring(inaddr))
-  {
-    // since this is a valid ipv6 string don't do any DNS
-    return true;
-  }
-  else // not a dotted string, try to resolve it via DNS
-  {
 #if defined (CPU) && CPU == PPC603
   int lookupResult = hostGetByName(inaddr);
 
@@ -949,7 +938,7 @@ bool IpAddress::parse_address(const char *inaddr)
      return false;
 
   // save the friendly name
-  strcpy(iv_friendly_name, inaddr);
+  iv_friendly_name = inaddr;
 
   return true;
 
@@ -1026,7 +1015,7 @@ bool IpAddress::parse_address(const char *inaddr)
           return false;
 
         // save the friendly name
-        strcpy(iv_friendly_name, inaddr);
+        iv_friendly_name = inaddr;
 
         return true;
       }
@@ -1050,7 +1039,7 @@ bool IpAddress::parse_address(const char *inaddr)
           return false;
 
         // save the friendly name
-        strcpy(iv_friendly_name, inaddr);
+        iv_friendly_name = inaddr;
 
         return true;
       }
@@ -1065,7 +1054,7 @@ bool IpAddress::parse_address(const char *inaddr)
       return false;
     }
 #endif //PPC603
-  }  // end else not a dotted string
+
 #endif // HAVE_GETADDRINFO
   return true;
 }
@@ -1107,7 +1096,7 @@ int IpAddress::addr_to_friendly()
 #endif
         )
     {
-      strncpy(iv_friendly_name, res->ai_canonname, MAX_FRIENDLY_NAME);
+      iv_friendly_name = res->ai_canonname;
       freeaddrinfo(res);
       return 0;
     }
@@ -1211,7 +1200,7 @@ int IpAddress::addr_to_friendly()
 #if defined (CPU) && CPU == PPC603
   if (lookupResult != ERROR)
   {
-    strncpy(iv_friendly_name, hName, MAX_FRIENDLY_NAME);
+    iv_friendly_name = hName;
     return 0;
   }
   else
@@ -1225,7 +1214,7 @@ int IpAddress::addr_to_friendly()
 #else
   if (lookupResult)
   {
-    strcpy(iv_friendly_name, lookupResult->h_name);
+    iv_friendly_name = lookupResult->h_name;
     return 0;
   }
   else
@@ -1401,7 +1390,7 @@ void IpAddress::clear()
   iv_friendly_name_status = 0;
   ip_version = version_ipv4;
   have_ipv6_scope = false;
-  memset(iv_friendly_name, 0, sizeof(char) * MAX_FRIENDLY_NAME);
+  iv_friendly_name.clear();
   smival.value.string.len = IPLEN;
 }
 
@@ -1539,7 +1528,7 @@ SnmpSyntax& UdpAddress::operator=(const SnmpSyntax &val)
         {
           memcpy(address_buffer,((UdpAddress &)val).smival.value.string.ptr,
                  UDPIPLEN);
-          memset(iv_friendly_name, 0, sizeof(char) * MAX_FRIENDLY_NAME);
+          iv_friendly_name.clear();
           valid_flag = true;
           ip_version = version_ipv4;
           smival.value.string.len = UDPIPLEN;
@@ -1548,7 +1537,7 @@ SnmpSyntax& UdpAddress::operator=(const SnmpSyntax &val)
         {
           memcpy(address_buffer,((UdpAddress &)val).smival.value.string.ptr,
                  UDPIP6LEN_NO_SCOPE);
-          memset(iv_friendly_name, 0, sizeof(char) * MAX_FRIENDLY_NAME);
+          iv_friendly_name.clear();
           valid_flag = true;
           ip_version = version_ipv6;
           smival.value.string.len = UDPIP6LEN_NO_SCOPE;
@@ -1558,7 +1547,7 @@ SnmpSyntax& UdpAddress::operator=(const SnmpSyntax &val)
         {
           memcpy(address_buffer,((UdpAddress &)val).smival.value.string.ptr,
                  UDPIP6LEN_WITH_SCOPE);
-          memset(iv_friendly_name, 0, sizeof(char) * MAX_FRIENDLY_NAME);
+          iv_friendly_name.clear();
           valid_flag = true;
           ip_version = version_ipv6;
           smival.value.string.len = UDPIP6LEN_WITH_SCOPE;
@@ -1595,7 +1584,7 @@ Address& UdpAddress::operator=(const Address &val)
         {
           MEMCPY(address_buffer,((UdpAddress &)val).smival.value.string.ptr,
                  UDPIPLEN);
-          memset(iv_friendly_name, 0, sizeof(char) * MAX_FRIENDLY_NAME);
+          iv_friendly_name.clear();
           valid_flag = true;
           ip_version = version_ipv4;
           smival.value.string.len = UDPIPLEN;
@@ -1604,7 +1593,7 @@ Address& UdpAddress::operator=(const Address &val)
         {
           MEMCPY(address_buffer,((UdpAddress &)val).smival.value.string.ptr,
                  UDPIP6LEN_NO_SCOPE);
-          memset(iv_friendly_name, 0, sizeof(char) * MAX_FRIENDLY_NAME);
+          iv_friendly_name.clear();
           valid_flag = true;
           ip_version = version_ipv6;
           smival.value.string.len = UDPIP6LEN_NO_SCOPE;
@@ -1614,7 +1603,7 @@ Address& UdpAddress::operator=(const Address &val)
         {
           MEMCPY(address_buffer,((UdpAddress &)val).smival.value.string.ptr,
                  UDPIP6LEN_WITH_SCOPE);
-          memset(iv_friendly_name, 0, sizeof(char) * MAX_FRIENDLY_NAME);
+          iv_friendly_name.clear();
           valid_flag = true;
           ip_version = version_ipv6;
           smival.value.string.len = UDPIP6LEN_WITH_SCOPE;

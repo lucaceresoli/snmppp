@@ -51,10 +51,10 @@
   Class definition for SMI Counter32 class.
 
 =====================================================================*/
-// $Id: counter.h 2359 2013-05-09 20:07:01Z fock $
+// $Id: counter.h 3169 2016-09-26 20:45:41Z katz $
 
-#ifndef _COUNTER
-#define _COUNTER
+#ifndef _SNMP_COUNTER_H_
+#define _SNMP_COUNTER_H_
 
 #include "snmp_pp/integer.h"
 
@@ -71,12 +71,6 @@ namespace Snmp_pp {
 class DLLOPT Counter32: public SnmpUInt32
 {
  public:
-#if 0
-  /**
-   * Constructor to create a Counter object with value zero.
-   */
-  Counter32() : SnmpUInt32() { smival.syntax = sNMP_SYNTAX_CNTR32; };
-#endif
 
   /**
    * Constructor with a value - defaults to 0.
@@ -145,20 +139,10 @@ class DLLOPT Counter32: public SnmpUInt32
     SnmpUInt32::operator = (ul);
     return *this;
   }
-
-#if 0
-  // XXX this operator is already provided by SnmpUInt32
-  /**
-   * Casting to unsigned long.
-   *
-   * @return Current value as an unsigned long
-   */
-  operator unsigned long() { return smival.value.uNumber; };
-#endif
 };
 
 #ifdef SNMP_PP_NAMESPACE
 } // end of namespace Snmp_pp
 #endif 
 
-#endif // _COUNTER
+#endif // _SNMP_COUNTER_H_

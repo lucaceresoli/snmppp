@@ -25,11 +25,12 @@
   _##  
   _##########################################################################*/
 
-// $Id: mp_v3.h 2938 2015-12-18 20:40:33Z katz $
+// $Id: mp_v3.h 3164 2016-09-23 21:30:38Z katz $
 
-#ifndef _MP_V3
-#define _MP_V3
+#ifndef _SNMP_MP_V3_H_
+#define _SNMP_MP_V3_H_
 
+#include <libsnmp.h>
 #include "snmp_pp/config_snmp_pp.h"
 
 #ifdef _SNMPv3
@@ -664,4 +665,4 @@ class DLLOPT v3MP
 
 #endif // _SNMPv3
 
-#endif
+#endif // _SNMP_MP_V3_H_

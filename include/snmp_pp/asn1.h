@@ -24,11 +24,12 @@
   _##  upon this software code base. 
   _##  
   _##########################################################################*/
-// $Id: asn1.h 2543 2014-01-24 13:17:46Z fock $
+// $Id: asn1.h 3164 2016-09-23 21:30:38Z katz $
 
-#ifndef _ASN1
-#define _ASN1
+#ifndef _SNMP_ASN1_H_
+#define _SNMP_ASN1_H_
 
+#include <libsnmp.h>
 #include "snmp_pp/config_snmp_pp.h"
 #include "snmp_pp/target.h"
 
@@ -441,4 +442,4 @@ DLLOPT unsigned char *asn1_build_scoped_pdu(
 } // end of namespace Snmp_pp
 #endif 
 
-#endif  // _ASN1
+#endif  // _SNMP_ASN1_H_

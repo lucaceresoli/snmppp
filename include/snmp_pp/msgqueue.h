@@ -56,17 +56,14 @@
 	Queue for holing SNMP event sources (outstanding snmp messages)
 
 =====================================================================*/
-// $Id: msgqueue.h 2359 2013-05-09 20:07:01Z fock $
+// $Id: msgqueue.h 3164 2016-09-23 21:30:38Z katz $
 
-#ifndef _MSGQUEUE
-#define _MSGQUEUE
+#ifndef _SNMP_MSGQUEUE_H_
+#define _SNMP_MSGQUEUE_H_
 
 //----[ includes ]-----------------------------------------------------
-#include <sys/types.h>		// NOTE:  due to 10.10 bug, order is important
-				//   in that all routines must include types.h
-				//   and time.h in same order otherwise you
-				//   will get conflicting definitions of
-				//   "fd_set" resulting in link time errors.
+#include <libsnmp.h>
+
 #ifndef WIN32
 #if !(defined CPU && CPU == PPC603)
 #include <sys/time.h>	// time stuff and fd_set
@@ -86,12 +83,8 @@
 namespace Snmp_pp {
 #endif
 
-//----[ defines ]------------------------------------------------------
-
-
 
 //----[ CSNMPMessage class ]-------------------------------------------
-
 
   /*-----------------------------------------------------------*/
   /* CSNMPMessage					       */
@@ -222,4 +215,4 @@ class DLLOPT CSNMPMessageQueue: public CEvents
 } // end of namespace Snmp_pp
 #endif 
 
-#endif
+#endif // _SNMP_MSGQUEUE_H_

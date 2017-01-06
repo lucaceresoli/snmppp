@@ -24,11 +24,12 @@
   _##  upon this software code base. 
   _##  
   _##########################################################################*/
-// $Id: reentrant.h 2359 2013-05-09 20:07:01Z fock $
+// $Id: reentrant.h 3164 2016-09-23 21:30:38Z katz $
 
-#ifndef _reentrant_h_
-#define _reentrant_h_
+#ifndef _SNMP_REENTRANT_H_
+#define _SNMP_REENTRANT_H_
 
+#include <libsnmp.h>
 #include "snmp_pp/config_snmp_pp.h"
 #include "snmp_pp/smi.h"
 
@@ -81,5 +82,4 @@ class DLLOPT SnmpSynchronize {
 } // end of namespace Snmp_pp
 #endif 
 
-#endif
-
+#endif // _SNMP_REENTRANT_H_

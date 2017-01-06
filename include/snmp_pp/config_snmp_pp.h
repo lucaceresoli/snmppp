@@ -28,10 +28,14 @@
 #ifndef _CONFIG_SNMP_PP_H_
 #define _CONFIG_SNMP_PP_H_
 
-#define SNMP_PP_VERSION_STRING "3.3.7"
+#ifndef __LIBSNMP_H_INCLUDED__
+#include <libsnmp.h>
+#endif
+
+#define SNMP_PP_VERSION_STRING "3.3.8"
 #define SNMP_PP_VERSION 3
 #define SNMP_PP_RELEASE 3
-#define SNMP_PP_PATCHLEVEL 6
+#define SNMP_PP_PATCHLEVEL 8
 
 //! The maximum size of a message that can be sent or received.
 #define MAX_SNMP_PACKET 4096
@@ -272,5 +276,12 @@ typedef unsigned long long pp_uint64;
 
 #endif // WIN32
 #endif // ENABLE_THREADS
+
+#ifdef _THREADS
+#ifndef _WIN32THREADS
+#include <pthread.h>
+#endif
+#endif
+
 
 #endif // _CONFIG_SNMP_PP_H_

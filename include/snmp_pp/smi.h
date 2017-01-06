@@ -47,12 +47,12 @@
 
   AUTHOR:           Peter E Mellquist
 =====================================================================*/
-// $Id: smi.h 2359 2013-05-09 20:07:01Z fock $
+// $Id: smi.h 3164 2016-09-23 21:30:38Z katz $
 
-#ifndef _SMIDEF
-#define _SMIDEF
+#ifndef _SNMP_SMI_H_
+#define _SNMP_SMI_H_
 
-// make sure configuration is included first
+#include <libsnmp.h>
 #include "snmp_pp/config_snmp_pp.h"
 
 #ifdef SNMP_PP_NAMESPACE
@@ -197,6 +197,4 @@ typedef struct {
 } // end of namespace Snmp_pp
 #endif 
 
-#endif
-
-
+#endif // _SNMP_SMI_H_

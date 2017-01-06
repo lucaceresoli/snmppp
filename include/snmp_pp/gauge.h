@@ -50,10 +50,10 @@
   DESCRIPTION:
   Class definition for SMI Gauge32 class.
 =====================================================================*/
-// $Id: gauge.h 2359 2013-05-09 20:07:01Z fock $
+// $Id: gauge.h 3169 2016-09-26 20:45:41Z katz $
 
-#ifndef _GAUGE_H_
-#define _GAUGE_H_
+#ifndef _SNMP_GAUGE_H_
+#define _SNMP_GAUGE_H_
 
 #include "snmp_pp/integer.h"
 
@@ -72,12 +72,6 @@ class DLLOPT Gauge32: public SnmpUInt32
  public:
 
   //-----------[ Constructors and Destrucotr ]----------------------
-#if 0
-  /**
-   * Constructs a valid Gauge32 with value 0.
-   */
-  Gauge32() : SnmpUInt32() { smival.syntax = sNMP_SYNTAX_GAUGE32; }
-#endif
 
   /**
    * Constructs a valid Gauge32 with the given value.
@@ -147,20 +141,10 @@ class DLLOPT Gauge32: public SnmpUInt32
     SnmpUInt32::operator = (ul);
     return *this;
   }
-#if 0
-  // XXX this operator is already provided by SnmpUInt32
-  // otherwise, behave like an unsigned int
-  /**
-   * Cast a Gauge32 to unsigned long.
-   *
-   * @return Current value as unsigned long.
-   */
-  operator unsigned long() { return smival.value.uNumber; }
-#endif
 };
 
 #ifdef SNMP_PP_NAMESPACE
 } // end of namespace Snmp_pp
 #endif 
 
-#endif // _GAUGE_H_
+#endif // _SNMP_GAUGE_H_

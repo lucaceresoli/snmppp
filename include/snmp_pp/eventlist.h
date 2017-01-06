@@ -56,18 +56,15 @@
         Queue for holding all event sources (snmp messages, user
         defined input sources, user defined timeouts, etc)
 =====================================================================*/
-// $Id: eventlist.h 2359 2013-05-09 20:07:01Z fock $
+// $Id: eventlist.h 3164 2016-09-23 21:30:38Z katz $
 
-#ifndef _EVENTLIST
-#define _EVENTLIST
+#ifndef _SNMP_EVENTLIST_H_
+#define _SNMP_EVENTLIST_H_
 
 //----[ includes ]-----------------------------------------------------
+#include <libsnmp.h>
 #include <limits.h>
-#include <sys/types.h> // NOTE: due to 10.10 bug, order is important
-                       //   in that all routines must include types.h
-                       //   and time.h in same order otherwise you
-                       //   will get conflicting definitions of
-                       //   "fd_set" resulting in link time errors.
+#include <sys/types.h>
 #ifdef WIN32
 #include <time.h>
 #else
@@ -196,4 +193,4 @@ class DLLOPT CEventList: public SnmpSynchronized {
 } // end of namespace Snmp_pp
 #endif 
 
-#endif
+#endif // _SNMP_EVENTLIST_H_

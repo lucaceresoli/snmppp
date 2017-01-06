@@ -232,11 +232,11 @@
 /* Define to 1 if you have the <winsock.h> header file. */
 #undef HAVE_WINSOCK_H
 
+/* Define to 1 if you have the <ws2tcpip.h> header file. */
+#undef HAVE_WS2TCPIP_H
+
 /* Define to 1 if you have the <wspiapi.h> header file. */
 #undef HAVE_WSPIAPI_H
-
-/* Define to 1 if you have the <wstcpip.h> header file. */
-#undef HAVE_WSTCPIP_H
 
 /* _XOPEN_SOURCE $HAVE_XOPEN_SOURCE */
 #undef HAVE_XOPEN_SOURCE

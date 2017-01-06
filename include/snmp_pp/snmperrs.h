@@ -50,11 +50,12 @@
 
   DESIGN + AUTHOR:  Jeff Meyer
 ============================================================================*/
-// $Id: snmperrs.h 2359 2013-05-09 20:07:01Z fock $
+// $Id: snmperrs.h 3164 2016-09-23 21:30:38Z katz $
 
-#ifndef _SNMPERRS_H
-#define _SNMPERRS_H
+#ifndef _SNMP_SNMPERRS_H_
+#define _SNMP_SNMPERRS_H_
 
+#include <libsnmp.h>
 #include "snmp_pp/config_snmp_pp.h"
 
 #ifdef SNMP_PP_NAMESPACE
@@ -269,4 +270,4 @@ static const char * nErrs[] =
 } // end of namespace Snmp_pp
 #endif 
 
-#endif //_SNMPERRS_H
+#endif // _SNMP_SNMPERRS_H_

@@ -25,11 +25,15 @@
   _##  
   _##########################################################################*/
 
+#ifndef _SNMP_SHA_H_
+#define _SNMP_SHA_H_
+
+#include <libsnmp.h>
 #include "snmp_pp/config_snmp_pp.h"
 
 #if !defined(_USE_LIBTOMCRYPT) && !defined(_USE_OPENSSL)
 
-// $Id: sha.h 2359 2013-05-09 20:07:01Z fock $
+// $Id: sha.h 3179 2016-10-17 20:06:26Z katz $
 /****************************************************************
  * SHS.h  -  Secure Hash Standard (draft) FIPS 180-1            *
  *                                                              *
@@ -56,9 +60,9 @@ typedef struct {
   unsigned char X[64];
 } SHA_CTX;
 
-DLLOPT void SHAInit(SHA_CTX *ctx);
-DLLOPT void SHAUpdate(SHA_CTX *ctx, const unsigned char *buf, unsigned int lenBuf);
-DLLOPT void SHAFinal(unsigned char *digest, SHA_CTX *ctx);
+DLLOPT int SHAInit(SHA_CTX *ctx);
+DLLOPT int SHAUpdate(SHA_CTX *ctx, const unsigned char *buf, unsigned int lenBuf);
+DLLOPT int SHAFinal(unsigned char *digest, SHA_CTX *ctx);
 
 #ifdef SNMP_PP_NAMESPACE
 } // end of namespace Snmp_pp
@@ -66,3 +70,4 @@ DLLOPT void SHAFinal(unsigned char *digest, SHA_CTX *ctx);
 
 #endif // !defined(_USE_LIBTOMCRYPT) && !defined(_USE_OPENSSL)
 
+#endif // _SNMP_SHA_H_

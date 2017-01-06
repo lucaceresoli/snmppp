@@ -49,7 +49,7 @@
   DESCRIPTION:
   Class implentation for SMI Timeticks class.
 =====================================================================*/
-char timetick_cpp_version[]="#(@) SNMP++ $Id: timetick.cpp 2361 2013-05-09 22:15:06Z katz $";
+char timetick_cpp_version[]="#(@) SNMP++ $Id: timetick.cpp 3169 2016-09-26 20:45:41Z katz $";
 
 #include <libsnmp.h>
 
@@ -60,14 +60,6 @@ namespace Snmp_pp {
 #endif
 
 #if 0
-// Copy constructor
-TimeTicks::TimeTicks(const TimeTicks &t) : SnmpUInt32()
-{
-  smival.value.uNumber = t.smival.value.uNumber;
-  valid_flag = t.valid_flag;
-  smival.syntax = sNMP_SYNTAX_TIMETICKS;
-}
-
 // general assignment from any Value
 SnmpSyntax& TimeTicks::operator=(const SnmpSyntax &in_val)
 {

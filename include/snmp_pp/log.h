@@ -25,9 +25,10 @@
   _##  
   _##########################################################################*/
 
-#ifndef _log_h_
-#define _log_h_
+#ifndef _SNMP_LOG_H_
+#define _SNMP_LOG_H_
 
+#include <libsnmp.h>
 #include <snmp_pp/config_snmp_pp.h>
 #include <snmp_pp/reentrant.h>
 
@@ -609,8 +610,8 @@ protected:
 	static const char defaultName;
 };
 
-
 #ifdef SNMP_PP_NAMESPACE
 }
 #endif
-#endif // _log_h_
+
+#endif // _SNMP_LOG_H_

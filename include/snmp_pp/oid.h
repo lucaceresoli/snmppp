@@ -53,22 +53,18 @@
   which supports C++.
 
 =====================================================================*/
-// $Id: oid.h 2359 2013-05-09 20:07:01Z fock $
+// $Id: oid.h 3169 2016-09-26 20:45:41Z katz $
 
-#ifndef _OID_H_
-#define _OID_H_
+#ifndef _SNMP_OID_H_
+#define _SNMP_OID_H_
 
 #include <libsnmp.h>
-
-//------------------------------------------------------------------------
-
-#include "snmp_pp/smival.h"                // derived class for all values
+#include "snmp_pp/smival.h"
 #include "snmp_pp/collect.h"
 
 #ifdef SNMP_PP_NAMESPACE
 namespace Snmp_pp {
 #endif
-
 
 /**
  * The Object Identifier Class.
@@ -99,9 +95,7 @@ class DLLOPT Oid : public SnmpSyntax
    * Construct an invalid Oid.
    */
   Oid()
-    : iv_str(0)
-    , iv_part_str(0)
-    , m_changed(true)
+    : iv_str(0), iv_part_str(0), m_changed(true)
   {
     smival.syntax = sNMP_SYNTAX_OID;
     smival.value.oid.len = 0;
@@ -132,9 +126,7 @@ class DLLOPT Oid : public SnmpSyntax
    * @param oid - Source Oid
    */
   Oid(const Oid &oid)
-    : iv_str(0)
-    , iv_part_str(0)
-    , m_changed(true)
+    : iv_str(0), iv_part_str(0), m_changed(true)
   {
     smival.syntax = sNMP_SYNTAX_OID;
     smival.value.oid.len = 0;
@@ -157,9 +149,7 @@ class DLLOPT Oid : public SnmpSyntax
    * @param oid_len - length of array
    */
   Oid(const unsigned long *raw_oid, int oid_len)
-    : iv_str(0)
-    , iv_part_str(0)
-    , m_changed(true)
+    : iv_str(0), iv_part_str(0), m_changed(true)
   {
     smival.syntax = sNMP_SYNTAX_OID;
     smival.value.oid.len = 0;
@@ -275,72 +265,6 @@ class DLLOPT Oid : public SnmpSyntax
    */
   bool operator >= (const Oid &rhs) const
       { return (!(*this < rhs)); }  // just invert existing <
-
-#if 0
-  /**
-   * Overloaded equal operator.
-   */
-  DLLOPT friend bool operator==(const Oid &lhs, const Oid &rhs);
-
-  /**
-   * Overloaded not equal operator.
-   */
-  DLLOPT friend bool operator!=(const Oid &lhs, const Oid &rhs)
-      { return (!(lhs == rhs)); }  // just invert ==
-
-  /**
-   * Overloaded less than < operator.
-   */
-  DLLOPT friend bool operator<(const Oid &lhs, const Oid &rhs);
-
-  /**
-   * Overloaded less than <= operator.
-   */
-  DLLOPT friend bool operator<=(const Oid &lhs, const Oid &rhs)
-      { return ((lhs < rhs) || (lhs == rhs)); };
-
-  /**
-   * Overloaded greater than > operator.
-   */
-  DLLOPT friend bool operator>(const Oid &lhs, const Oid &rhs)
-      { return (!(lhs <= rhs)); };  // just invert existing <=
-
-  /**
-   * Overloaded greater than >= operator.
-   */
-  DLLOPT friend bool operator>=(const Oid &lhs, const Oid &rhs)
-      { return (!(lhs < rhs)); };  // just invert existing <
-
-  /**
-   * Overloaded equal operator operator.
-   */
-  DLLOPT friend bool operator==(const Oid &lhs, const char *rhs);
-
-  /**
-   * Overloaded not equal operator.
-   */
-  DLLOPT friend bool operator!=(const Oid &lhs, const char *rhs);
-
-  /**
-   * Overloaded less than < operator.
-   */
-  DLLOPT friend bool operator<(const Oid &lhs, const char *rhs);
-
-  /**
-   * Overloaded less than <= operator.
-   */
-  DLLOPT friend bool operator<=(const Oid &lhs, char *rhs);
-
-  /**
-   * Overloaded greater than > operator.
-   */
-  DLLOPT friend bool operator>(const Oid &lhs, const char *rhs);
-
-  /**
-   * Overloaded greater than >= operator.
-   */
-  DLLOPT friend bool operator>=(const Oid &lhs, const char *rhs);
-#endif
 
   /**
    * Overloaded operator +, Concatenate two Oids.
@@ -720,4 +644,4 @@ inline void Oid::delete_oid_ptr()
 } // end of namespace Snmp_pp
 #endif 
 
-#endif //_OID_H_
+#endif // _SNMP_OID_H_

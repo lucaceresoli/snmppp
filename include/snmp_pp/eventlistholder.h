@@ -25,10 +25,11 @@
   _##  
   _##########################################################################*/
 
-#ifndef _EVENTLISTHOLDER_H_
-#define _EVENTLISTHOLDER_H_
+#ifndef _SNMP_EVENTLISTHOLDER_H_
+#define _SNMP_EVENTLISTHOLDER_H_
 
 //----[ includes ]-----------------------------------------------------
+#include <libsnmp.h>
 #include "snmp_pp/config_snmp_pp.h"
 #include "snmp_pp/snmperrs.h"
 #include "snmp_pp/eventlist.h"
@@ -111,4 +112,4 @@ class DLLOPT EventListHolder
 } // end of namespace Snmp_pp
 #endif 
 
-#endif // _EVENTLISTHOLDER_H_
+#endif // _SNMP_EVENTLISTHOLDER_H_

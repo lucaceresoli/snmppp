@@ -29,10 +29,10 @@ dnl Process this file with autoconf to produce a configure script.
 
 dnl don't require higher autoconf version for win32 support
 AC_PREREQ([2.64])
-AC_INIT([snmp++], [3.3.7], [support@agentpp.com],[snmp++])
+AC_INIT([snmp++], [3.3.8], [support@agentpp.com],[snmp++])
 SNMP_PP_MAJOR_VERSION=3
 SNMP_PP_MINOR_VERSION=3
-SNMP_PP_MICRO_VERSION=6
+SNMP_PP_MICRO_VERSION=8
 AC_CONFIG_AUX_DIR([build-aux])
 AC_CONFIG_MACRO_DIR([m4])
 AM_INIT_AUTOMAKE([-Wall foreign])
@@ -195,6 +195,129 @@ dnl Checks for header files.
 AC_HEADER_STDC
 AC_CHECK_HEADERS([arpa/inet.h ctype.h errno.h float.h inttypes.h limits.h memory.h netdb.h netinet/in.h poll.h signal.h stdio.h stdlib.h string.h strings.h sys/param.h sys/select.h sys/socket.h sys/time.h sys/timeb.h sys/types.h sys/unistd.h time.h unistd.h])
 
+if test "$ac_cv_header_stdc" = "yes"; then
+	CNF_STDC_HEADERS=1
+else
+	CNF_STDC_HEADERS=0
+fi
+
+if test "$ac_cv_header_sys_types_h" = "yes"; then
+	CNF_HAVE_SYS_TYPES_H=1
+else
+	CNF_HAVE_SYS_TYPES_H=0
+fi
+if test "$ac_cv_header_sys_param_h" = "yes"; then
+	CNF_HAVE_SYS_PARAM_H=1
+else
+	CNF_HAVE_SYS_PARAM_H=0
+fi
+if test "$ac_cv_header_sys_stat_h" = "yes"; then
+	CNF_HAVE_SYS_STAT_H=1
+else
+	CNF_HAVE_SYS_STAT_H=0
+fi
+if test "$ac_cv_header_stdlib_h" = "yes"; then
+	CNF_HAVE_STDLIB_H=1
+else
+	CNF_HAVE_STDLIB_H=0
+fi
+if test "$ac_cv_header_unistd_h" = "yes"; then
+	CNF_HAVE_UNISTD_H=1
+else
+	CNF_HAVE_UNISTD_H=0
+fi
+if test "$ac_cv_header_memory_h" = "yes"; then
+	CNF_HAVE_MEMORY_H=1
+else
+	CNF_HAVE_MEMORY_H=0
+fi
+if test "$ac_cv_header_sys_unistd_h" = "yes"; then
+	CNF_HAVE_SYS_UNISTD_H=1
+else
+	CNF_HAVE_SYS_UNISTD_H=0
+fi
+if test "$ac_cv_header_stdint_h" = "yes"; then
+	CNF_HAVE_STDINT_H=1
+else
+	CNF_HAVE_STDINT_H=0
+fi
+if test "$ac_cv_header_poll_h" = "yes"; then
+	CNF_HAVE_POLL_H=1
+else
+	CNF_HAVE_POLL_H=0
+fi
+if test "$ac_cv_header_sys_select_h" = "yes"; then
+	CNF_HAVE_SYS_SELECT_H=1
+else
+	CNF_HAVE_SYS_SELECT_H=0
+fi
+if test "$ac_cv_header_string_h" = "yes"; then
+	CNF_HAVE_STRING_H=1
+else
+	CNF_HAVE_STRING_H=0
+fi
+if test "$ac_cv_header_strings_h" = "yes"; then
+	CNF_HAVE_STRINGS_H=1
+else
+	CNF_HAVE_STRINGS_H=0
+fi
+if test "$ac_cv_header_inttypes_h" = "yes"; then
+	CNF_HAVE_INTTYPES_H=1
+else
+	CNF_HAVE_INTTYPES_H=0
+fi
+if test "$ac_cv_header_ctype_h" = "yes"; then
+	CNF_HAVE_CTYPE_H=1
+else
+	CNF_HAVE_CTYPE_H=0
+fi
+if test "$ac_cv_header_signal_h" = "yes"; then
+	CNF_HAVE_SIGNAL_H=1
+else
+	CNF_HAVE_SIGNAL_H=0
+fi
+if test "$ac_cv_header_errno_h" = "yes"; then
+	CNF_HAVE_ERRNO_H=1
+else
+	CNF_HAVE_ERRNO_H=0
+fi
+if test "$ac_cv_header_time_h" = "yes"; then
+	CNF_HAVE_TIME_H=1
+else
+	CNF_HAVE_TIME_H=0
+fi
+if test "$ac_cv_header_sys_time_h" = "yes"; then
+	CNF_HAVE_SYS_TIME_H=1
+else
+	CNF_HAVE_SYS_TIME_H=0
+fi
+if test "$ac_cv_header_sys_timeb_h" = "yes"; then
+	CNF_HAVE_SYS_TIMEB_H=1
+else
+	CNF_HAVE_SYS_TIMEB_H=0
+fi
+if test "$ac_cv_header_sys_socket_h" = "yes"; then
+	CNF_HAVE_SYS_SOCKET_H=1
+else
+	CNF_HAVE_SYS_SOCKET_H=0
+fi
+if test "$ac_cv_header_netdb_h" = "yes"; then
+	CNF_HAVE_NETDB_H=1
+else
+	CNF_HAVE_NETDB_H=0
+fi
+if test "$ac_cv_header_arpa_inet_h" = "yes"; then
+	CNF_HAVE_ARPA_INET_H=1
+else
+	CNF_HAVE_ARPA_INET_H=0
+fi
+if test "$ac_cv_header_netinet_in_h" = "yes"; then
+	CNF_HAVE_NETINET_IN_H=1
+else
+	CNF_HAVE_NETINET_IN_H=0
+fi
+
+
 dnl Checks for inet libraries:
 AC_SEARCH_LIBS(gethostent, [nsl])
 AC_SEARCH_LIBS(setsockopt, [socket net network])
@@ -203,11 +326,45 @@ AC_SEARCH_LIBS(connect, [inet])
 AC_SEARCH_LIBS([clock_gettime],[rt posix4])
 
 ACX_WIN32(
-    AC_CHECK_HEADERS([io.h process.h winsock.h winsock2.h wstcpip.h wspiapi.h])
+    AC_CHECK_HEADERS([io.h process.h winsock.h winsock2.h ws2tcpip.h wspiapi.h])
     AC_CHECK_LIB([wsock32],[main])
     AC_CHECK_LIB([ws2_32],[main]),
     []
 )
+
+if test "$ac_cv_header_io_h" = "yes"; then
+	CNF_HAVE_IO_H=1
+else
+	CNF_HAVE_IO_H=0
+fi
+if test "$ac_cv_header_process_h" = "yes"; then
+	CNF_HAVE_PROCESS_H=1
+else
+	CNF_HAVE_PROCESS_H=0
+fi
+if test "$ac_cv_header_winsock_h" = "yes"; then
+	CNF_HAVE_WINSOCK_H=1
+else
+	CNF_HAVE_WINSOCK_H=0
+fi
+if test "$ac_cv_header_winsock2_h" = "yes"; then
+	CNF_HAVE_WINSOCK2_H=1
+else
+	CNF_HAVE_WINSOCK2_H=0
+fi
+if test "$ac_cv_header_ws2tcpip_h" = "yes"; then
+	CNF_HAVE_WS2TCPIP_H=1
+else
+	CNF_HAVE_WS2TCPIP_H=0
+fi
+if test "$ac_cv_header_wspiapi_h" = "yes"; then
+	CNF_HAVE_WSPIAPI_H=1
+else
+	CNF_HAVE_WSPIAPI_H=0
+fi
+
+
+
 
 dnl Checks for typedefs, structures, and compiler characteristics.
 AC_HEADER_STDBOOL
@@ -272,6 +429,18 @@ AC_CHECK_MEMBERS([struct sockaddr_storage.ss_family, struct sockaddr_storage.__s
 #  endif
 #endif
 ])
+
+if test "$ac_cv_member_struct_sockaddr_storage_ss_family" = "yes"; then
+	CNF_HAVE_STRUCT_SOCKADDR_STORAGE_SS_FAMILY=1
+else
+	CNF_HAVE_STRUCT_SOCKADDR_STORAGE_SS_FAMILY=0
+fi
+if test "$ac_cv_member_struct_sockaddr_storage___ss_family" = "yes"; then
+	CNF_HAVE_STRUCT_SOCKADDR_STORAGE___SS_FAMILY=1
+else
+	CNF_HAVE_STRUCT_SOCKADDR_STORAGE___SS_FAMILY=0
+fi
+
 
 AC_LANG_PUSH([C++])
 dnl Determine what socket length (socklen_t) data type is
@@ -342,6 +511,27 @@ AS_IF([test "x$ENABLE_IPV6" = "xyes"], [
 AC_FUNC_MALLOC
 AC_CHECK_FUNCS([gethostbyaddr gethostbyaddr_r gethostbyname gethostbyname2 gethostbyname_r gethostname gettimeofday getpid _getpid htonl inet_aton inet_ntoa inet_pton inet_ntop isdigit localtime_r memset poll select socket strcasecmp stricmp strchr strerror strstr clock_gettime])
 
+if test "$ac_cv_func_strcasecmp" = "yes"; then
+	CNF_HAVE_STRCASECMP=1
+else
+	CNF_HAVE_STRCASECMP=0
+fi
+if test "$ac_cv_func_stricmp" = "yes"; then
+	CNF_HAVE_STRICMP=1
+else
+	CNF_HAVE_STRICMP=0
+fi
+if test "$ac_cv_func_getpid" = "yes"; then
+	CNF_HAVE_GETPID=1
+else
+	CNF_HAVE_GETPID=0
+fi
+if test "$ac_cv_func__getpid" = "yes"; then
+	CNF_HAVE__GETPID=1
+else
+	CNF_HAVE__GETPID=0
+fi
+
 acx_have_getaddrinfo=no
 AC_CHECK_FUNC(getaddrinfo, acx_have_getaddrinfo=yes)
 AS_IF([test "x$acx_have_getaddrinfo" != "xyes"], [
@@ -389,6 +579,12 @@ AX_CXX_HEADER_STDCXX_TR1
 # Check for C++0x features
 AC_CXX_COMPILE_STDCXX_0X
 AX_CXX_HEADER_STDCXX_0X
+
+if test "$ax_cv_cxx_have_std_namespace" = "yes"; then
+	CNF_HAVE_NAMESPACE_STD=1
+else
+	CNF_HAVE_NAMESPACE_STD=0
+fi
 
 AS_IF(
   [test "x${ENABLE_NAMESPACE}" = "xyes"],
@@ -554,6 +750,15 @@ AS_IF([test "x${ENABLE_SNMPV3}" = "xyes"], [
   _NO_SNMPv3=1
 ]) dnl endif : --enable-snmpv3
 
+
+
+if test "$ax_cv_cxx_stdcxx_98" = yes; then
+	CNF_STDCXX_98_HEADERS=1
+else
+	CNF_STDCXX_98_HEADERS=0
+fi
+
+
 LT_INIT
 AC_PROG_LIBTOOL
 
@@ -578,5 +783,44 @@ AC_SUBST(WITH_MACADDRESS)
 AC_SUBST(WITH_IPXADDRESS)
 AC_SUBST(WITH_LOG_PROFILES)
 
+AC_SUBST(CNF_STDC_HEADERS)
+AC_SUBST(CNF_HAVE_SYS_TYPES_H)
+AC_SUBST(CNF_HAVE_SYS_STAT_H)
+AC_SUBST(CNF_HAVE_STDLIB_H)
+AC_SUBST(CNF_HAVE_UNISTD_H)
+AC_SUBST(CNF_HAVE_SYS_UNISTD_H)
+AC_SUBST(CNF_HAVE_STDINT_H)
+AC_SUBST(CNF_HAVE_POLL_H)
+AC_SUBST(CNF_HAVE_SYS_SELECT_H)
+AC_SUBST(CNF_HAVE_STRING_H)
+AC_SUBST(CNF_HAVE_STRINGS_H)
+AC_SUBST(CNF_HAVE_INTTYPES_H)
+AC_SUBST(CNF_HAVE_CTYPE_H)
+AC_SUBST(CNF_HAVE_SIGNAL_H)
+AC_SUBST(CNF_HAVE_ERRNO_H)
+AC_SUBST(CNF_HAVE_TIME_H)
+AC_SUBST(CNF_HAVE_NETDB_H)
+AC_SUBST(CNF_HAVE_MEMORY_H)
+AC_SUBST(CNF_HAVE_SYS_TIME_H)
+AC_SUBST(CNF_HAVE_SYS_TIMEB_H)
+AC_SUBST(CNF_HAVE_SYS_SOCKET_H)
+AC_SUBST(CNF_HAVE_ARPA_INET_H)
+AC_SUBST(CNF_HAVE_NETINET_IN_H)
+AC_SUBST(CNF_HAVE_IO_H)
+AC_SUBST(CNF_HAVE_PROCESS_H)
+AC_SUBST(CNF_HAVE_WINSOCK_H)
+AC_SUBST(CNF_HAVE_WINSOCK2_H)
+AC_SUBST(CNF_HAVE_WS2TCPIP_H)
+AC_SUBST(CNF_HAVE_WSPIAPI_H)
+AC_SUBST(CNF_STDCXX_98_HEADERS)
+AC_SUBST(CNF_HAVE_STRCASECMP)
+AC_SUBST(CNF_HAVE_STRICMP)
+AC_SUBST(CNF_HAVE_GETPID)
+AC_SUBST(CNF_HAVE__GETPID)
+AC_SUBST(CNF_HAVE_STRUCT_SOCKADDR_STORAGE_SS_FAMILY)
+AC_SUBST(CNF_HAVE_STRUCT_SOCKADDR_STORAGE___SS_FAMILY)
+AC_SUBST(CNF_HAVE_NAMESPACE_STD)
+AC_SUBST(CNF_HAVE_SYS_PARAM_H)
+
 AC_CONFIG_FILES([Makefile include/Makefile include/snmp_pp/Makefile consoleExamples/Makefile src/Makefile])
-AC_OUTPUT(snmp++-3.pc include/snmp_pp/config_snmp_pp.h)
+AC_OUTPUT(snmp++-3.pc include/snmp_pp/config_snmp_pp.h libsnmp.h)

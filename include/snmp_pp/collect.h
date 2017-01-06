@@ -50,11 +50,12 @@
   DESCRIPTION: Simple Collection classes for SNMP++ classes.
 
 =====================================================================*/
-// $Id: collect.h 2359 2013-05-09 20:07:01Z fock $
+// $Id: collect.h 3164 2016-09-23 21:30:38Z katz $
 
-#ifndef _COLLECTION_H_
-#define _COLLECTION_H_
+#ifndef _SNMP_COLLECT_H_
+#define _SNMP_COLLECT_H_
 
+#include <libsnmp.h>
 #include "snmp_pp/config_snmp_pp.h"
 
 #ifdef SNMP_PP_NAMESPACE
@@ -80,7 +81,7 @@ template <class T> class SnmpCollection
    * Create an empty collection.
    */
   SnmpCollection()
-    : count(0), data(0,0) {};
+    : count(0), data(0,0) {}
 
   /**
    * Create a collection using a single template object.
@@ -89,7 +90,7 @@ template <class T> class SnmpCollection
     : count(1), data(0, 0)
   {
     data.item[0] = (T*) (t.clone());
-  };
+  }
 
   /**
    * Create a collection with another collection (copy constructor).
@@ -119,7 +120,7 @@ template <class T> class SnmpCollection
       count++;
       cn++;
     }
-  };
+  }
 
   /**
    * Destroy the collection.
@@ -127,7 +128,7 @@ template <class T> class SnmpCollection
   ~SnmpCollection()
   {
     clear();  // just delete the data
-  };
+  }
 
   /**
    * Get the size of the collection.
@@ -135,7 +136,7 @@ template <class T> class SnmpCollection
   int size() const
   {
     return count;
-  };
+  }
 
   /**
    * Append an item to the collection.
@@ -160,7 +161,7 @@ template <class T> class SnmpCollection
     count++;
 
     return *this;
-  };
+  }
 
   /**
    * Assign one collection to another.
@@ -195,7 +196,7 @@ template <class T> class SnmpCollection
     }
 
     return *this;
-  };
+  }
 
   /**
    * Access an element in the collection.
@@ -219,7 +220,7 @@ template <class T> class SnmpCollection
       T t;
       return t;
     }
-  };
+  }
 
   /**
    * Set an element in the collection.
@@ -238,7 +239,7 @@ template <class T> class SnmpCollection
     delete current->item[cn];
     current->item[cn] = (T*) (i.clone());
     return 0;
-  };
+  }
 
   /**
    * Get an element in the collection.
@@ -256,7 +257,7 @@ template <class T> class SnmpCollection
       current = current->next;
     t = *(current->item[cn]);
     return 0;
-  };
+  }
 
   /**
    * Get a pointer to an element in the collection.
@@ -274,7 +275,7 @@ template <class T> class SnmpCollection
       current = current->next;
     t = current->item[cn];
     return 0;
-  };
+  }
 
   /**
    * Apply an function to the entire collection, iterator.
@@ -287,7 +288,7 @@ template <class T> class SnmpCollection
       this->get_element(temp, z);
       f(temp);
     }
-  };
+  }
 
   /**
    * Looks for an element in the collection.
@@ -306,7 +307,7 @@ template <class T> class SnmpCollection
       }
     }
     return false;
-  };
+  }
 
   /**
    * Delete an element in the collection.
@@ -335,7 +336,7 @@ template <class T> class SnmpCollection
       return true;
     }
     return false;   // not found thus not removed
-  };
+  }
 
   /**
    * Delete all elements within the collection.
@@ -371,7 +372,7 @@ template <class T> class SnmpCollection
     count = 0;
     data.next=0;
     data.prev=0;
-  };
+  }
 
  private:
   int count;
@@ -382,5 +383,5 @@ template <class T> class SnmpCollection
 } // end of namespace Snmp_pp
 #endif 
 
-#endif  // _COLLECTION_H_
+#endif  // _SNMP_COLLECT_H_
 

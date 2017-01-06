@@ -56,17 +56,14 @@
         Queue for holding sessions waiting for notifiactions
 
 =====================================================================*/
-// $Id: notifyqueue.h 2359 2013-05-09 20:07:01Z fock $
+// $Id: notifyqueue.h 3164 2016-09-23 21:30:38Z katz $
 
-#ifndef _NOTIFYQUEUE
-#define _NOTIFYQUEUE
+#ifndef _SNMP_NOTIFYQUEUE_H_
+#define _SNMP_NOTIFYQUEUE_H_
 
 //----[ includes ]-----------------------------------------------------
-#include <sys/types.h>          // NOTE: due to 10.10 bug, order is important
-                                //   in that all routines must include types.h
-                                //   and time.h in same order otherwise you
-                                //   will get conflicting definitions of
-                                //   "fd_set" resulting in link time errors.
+#include <libsnmp.h>
+#include <sys/types.h>
 #ifndef WIN32
 #if !(defined CPU && CPU == PPC603)
 #include <sys/time.h>	// time stuff and fd_set
@@ -197,4 +194,4 @@ class DLLOPT CNotifyEventQueue: public CEvents
 } // end of namespace Snmp_pp
 #endif 
 
-#endif // NOTIFYQUEUE
+#endif // _SNMP_NOTIFYQUEUE_H_

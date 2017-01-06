@@ -51,11 +51,12 @@
   Adapted and integrated into snmp++ by Ragavan Tetchinamourty
 
 =====================================================================*/
-// $Id: $
+// $Id: IPv6Utility.h 3164 2016-09-23 21:30:38Z katz $
 
-#ifndef _IPV6UTILITY_H
-#define _IPV6UTILITY_H
+#ifndef _SNMP_IPV6UTILITY_H_
+#define _SNMP_IPV6UTILITY_H_
 
+#include <libsnmp.h>
 #include "snmp_pp/config_snmp_pp.h"
 
 //FIXME #if defined(_MSC_VER) && defined(SNMP_PP_IPv6)
@@ -64,12 +65,11 @@
 //#define EAFNOSUPPORT WSAEAFNOSUPPORT
 #define ENOSPC 28
 
-
 const char * inet_ntop(int af, const void *src, char *dst, size_t size);
 
 //int inet_pton(int af, PCTSTR src, void *dst);
 
 #endif // defined(WIN32) && defined(SNMP_PP_IPv6)
 
-#endif // IPV6UTILITY_H
+#endif // _SNMP_IPV6UTILITY_H_
 

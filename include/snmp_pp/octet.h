@@ -52,10 +52,10 @@
   SNMP libraries. This class is portable across any platform
   which supports C++.
 =====================================================================*/
-// $Id: octet.h 2359 2013-05-09 20:07:01Z fock $
+// $Id: octet.h 3167 2016-09-26 18:52:43Z katz $
 
-#ifndef _OCTET_CLS
-#define _OCTET_CLS
+#ifndef _SNMP_OCTET_H_
+#define _SNMP_OCTET_H_
 
 #include "snmp_pp/smival.h"
 
@@ -457,4 +457,4 @@ class OpaqueStr: public OctetStr
 } // end of namespace Snmp_pp
 #endif 
 
-#endif // _OCTET_CLS
+#endif // _SNMP_OCTET_H_

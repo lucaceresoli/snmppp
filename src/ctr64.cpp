@@ -49,7 +49,7 @@
 
   DESCRIPTION:         Implementation for Counter64 (64 bit counter class).
 =====================================================================*/
-char counter64_cpp_version[]="@(#) SNMP++ $Id: ctr64.cpp 3015 2016-02-22 00:09:30Z fock $";
+char counter64_cpp_version[]="@(#) SNMP++ $Id: ctr64.cpp 3169 2016-09-26 20:45:41Z katz $";
 
 #include <libsnmp.h>
 
@@ -65,171 +65,6 @@ char counter64_cpp_version[]="@(#) SNMP++ $Id: ctr64.cpp 3015 2016-02-22 00:09:3
 
 #ifdef SNMP_PP_NAMESPACE
 namespace Snmp_pp {
-#endif
-
-#if 0
-//------------------[ constructor with no value ]------------------------
-Counter64::Counter64() : m_changed(true)
-{
-  smival.syntax = sNMP_SYNTAX_CNTR64;
-  smival.value.hNumber.hipart = 0;
-  smival.value.hNumber.lopart = 0;
-}
-
-//------------------[ constructor with values ]--------------------------
-Counter64::Counter64(unsigned long hi, unsigned long lo) : m_changed(true)
-{
-  smival.syntax = sNMP_SYNTAX_CNTR64;
-  smival.value.hNumber.hipart = hi;
-  smival.value.hNumber.lopart = lo;
-}
-
-//------------------[ constructor with low value only ]------------------
-Counter64::Counter64(unsigned long lo) : m_changed(true)
-{
-  smival.syntax = sNMP_SYNTAX_CNTR64;
-  smival.value.hNumber.hipart = 0;
-  smival.value.hNumber.lopart = lo;
-}
-#if 0
-//------------------[ constructor with full width value ]----------------
-Counter64::Counter64(pp_uint64 val) : m_changed(true)
-{
-  pp_uint64 high = (pp_uint64)UINT32_MAX + (pp_uint64)1; // gotta be UINT32_MAX + 1 to move it to next pos
-  unsigned long h = (unsigned long)(val / high);
-  smival.value.hNumber.hipart = h;
-  smival.value.hNumber.lopart = (unsigned long)(val & UINT32_MAX);
-}
-#endif
-//------------------[ copy constructor ]---------------------------------
-Counter64::Counter64(const Counter64 &ctr64 ) : m_changed(true)
-{
-  smival.syntax = sNMP_SYNTAX_CNTR64;
-  smival.value.hNumber.hipart = ctr64.high();
-  smival.value.hNumber.lopart = ctr64.low();
-}
-
-//------------------[ operator=(const Counter64 &ctr64) ]-------------
-// assign a ctr64 to a ctr64
-Counter64& Counter64::operator=(const Counter64 &ctr64)
-{
-  if (this == &ctr64) return *this;  // check for self assignment
-  smival.value.hNumber.hipart = ctr64.high();
-  smival.value.hNumber.lopart = ctr64.low();
-  m_changed = true;
-  return *this;
-}
-
-//-------------------[ operator=(const unsigned long int i) ]---------
-// assign a ul to a ctr64, clears the high part
-// and assugns the low part
-Counter64& Counter64::operator=(const unsigned long i)
-{
-  smival.value.hNumber.hipart = 0;
-  smival.value.hNumber.lopart = i;
-  m_changed = true;
-  return *this;
-}
-
-//-----------[ c64_to_ll(Counter64 c64) ]-----------------------------
-// convert a Counter 64 to a 64 bit integer
-pp_uint64 Counter64::c64_to_ll(const Counter64 &c64)
-{
-  pp_uint64 ll = c64.high();
-  ll *= (pp_uint64)UINT32_MAX + (pp_uint64)1; // gotta be UINT32_MAX + 1 to move it to next pos
-  ll += c64.low();
-  return ll;
-}
-
-//-----------[ c64_to_ll( ) ]------------------------------------------
-pp_uint64 Counter64::c64_to_ll() const
-{
-  pp_uint64 ll = high();
-  ll *= (pp_uint64)UINT32_MAX + (pp_uint64)1; // gotta be UINT32_MAX + 1 to move it to next pos
-  ll += low();
-  return ll;
-}
-
-//-----------[ ll_to_c64(pp_uint64 ll) ]----------------------------
-// convert a 64 bit integer to a Counter64
-Counter64 Counter64::ll_to_c64(const pp_uint64 &ll)
-{
-  pp_uint64 high = (pp_uint64)UINT32_MAX + (pp_uint64)1; // look above
-  unsigned long h = (unsigned long)(ll / high);
-  return Counter64(h, (unsigned long)(ll - (h * high)));
-}
-
-//----------[ Counter64::operator+(const Counter64 &c) ]---------------
-// add two Counter64s
-Counter64 Counter64::operator+(const Counter64 &c) const
-{
-  pp_uint64 llsum = c64_to_ll() + c.c64_to_ll();
-  return ll_to_c64(llsum);
-}
-
-//------------[ Counter64::operator-(const Counter64 &c) ]-------------
-// subtract two Counter64s
-Counter64 Counter64::operator-(const Counter64 &c) const
-{
-  pp_uint64 lldiff = c64_to_ll() - c.c64_to_ll();
-  return ll_to_c64(lldiff);
-}
-
-//------------[ Counter64::operator*(const Counter64 &c) ]-------------
-// multiply two Counter64s
-Counter64 Counter64::operator*(const Counter64 &c) const
-{
-  pp_uint64 llmult = c64_to_ll() * c.c64_to_ll();
-  return ll_to_c64(llmult);
-}
-
-//------------[ Counter64::operator/(const Counter64 &c) ]--------------
-// divide two Counter64s
-Counter64 Counter64::operator/(const Counter64 &c) const
-{
-  pp_uint64 lldiv = c64_to_ll() / c.c64_to_ll();
-  return ll_to_c64(lldiv);
-}
-
-//-------[ overloaded equivlence test ]----------------------------------
-bool operator==(const Counter64 &lhs, const Counter64 &rhs)
-{
-  return ((lhs.high() == rhs.high()) && (lhs.low() == rhs.low()));
-}
-
-//-------[ overloaded not equal test ]-----------------------------------
-bool operator!=(const Counter64 &lhs, const Counter64 &rhs)
-{
-  return ((lhs.high() != rhs.high()) || (lhs.low() != rhs.low()));
-}
-
-//--------[ overloaded less than ]---------------------------------------
-bool operator<(const Counter64 &lhs, const Counter64 &rhs)
-{
-  return ( (lhs.high() < rhs.high()) ||
-	   ((lhs.high() == rhs.high()) && (lhs.low() < rhs.low())));
-}
-
-//---------[ overloaded less than or equal ]-----------------------------
-bool operator<=(const Counter64 &lhs, const Counter64 &rhs)
-{
-  return ( (lhs.high() < rhs.high()) ||
-	   ((lhs.high() == rhs.high()) && (lhs.low() <= rhs.low())));
-}
-
-//---------[ overloaded greater than ]-----------------------------------
-bool operator>(const Counter64 &lhs, const Counter64 &rhs)
-{
-  return ( (lhs.high() > rhs.high()) ||
-	   ((lhs.high() == rhs.high()) && (lhs.low() > rhs.low())));
-}
-
-//----------[ overloaded greater than or equal ]-------------------------
-bool operator>=(const Counter64 &lhs, const Counter64 &rhs)
-{
-  return ( (lhs.high() > rhs.high()) ||
-	   ((lhs.high() == rhs.high()) && (lhs.low() >= rhs.low())));
-}
 #endif
 
 //----------[ return ASCII format ]-------------------------
@@ -253,7 +88,6 @@ const char *Counter64::get_printable() const
 
   return output_buffer;
 }
-
 
 //----------------[ general Value = operator ]---------------------
 SnmpSyntax& Counter64::operator=(const SnmpSyntax &val)

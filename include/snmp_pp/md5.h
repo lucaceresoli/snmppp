@@ -25,6 +25,10 @@
   _##  
   _##########################################################################*/
 
+#ifndef _SNMP_MD5_H_
+#define _SNMP_MD5_H_
+
+#include <libsnmp.h>
 #include "snmp_pp/config_snmp_pp.h"
 
 #if !defined(_USE_LIBTOMCRYPT) && !defined(_USE_OPENSSL)
@@ -51,10 +55,7 @@
    These notices must be retained in any copies of any part of this
    documentation and/or software.
  */
-// $Id: md5.h 2359 2013-05-09 20:07:01Z fock $
-
-#ifndef _MD5_H_
-#define _MD5_H_
+// $Id: md5.h 3164 2016-09-23 21:30:38Z katz $
 
 #ifdef __cplusplus
 extern "C" {
@@ -71,8 +72,7 @@ typedef unsigned char *POINTER;
 typedef unsigned short int UINT2;
 
 /* UINT4 defines a four byte word */
-typedef unsigned int UINT4; /* for alpha */
-/*typedef unsigned long int UINT4; */
+typedef unsigned int UINT4;
 
 /* BYTE defines a unsigned character */
 typedef unsigned char BYTE;
@@ -121,6 +121,6 @@ DLLOPT void  MD5Final PROTO_LIST ((unsigned char [16], MD5_CTX *));
 }
 #endif
 
-#endif
-
 #endif // !defined(_USE_LIBTOMCRYPT) && !defined(_USE_OPENSSL)
+
+#endif // _SNMP_MD5_H_

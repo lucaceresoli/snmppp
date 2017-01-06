@@ -24,7 +24,7 @@
   _##  upon this software code base. 
   _##  
   _##########################################################################*/
-// $Id: idea.h 2359 2013-05-09 20:07:01Z fock $
+// $Id: idea.h 3164 2016-09-23 21:30:38Z katz $
 
 /*
 
@@ -41,9 +41,10 @@ The IDEA encryption algorithm.
 
 */
 
-#ifndef IDEA_H
-#define IDEA_H
+#ifndef _SNMP_IDEA_H_
+#define _SNMP_IDEA_H_
 
+#include <libsnmp.h>
 #include "snmp_pp/config_snmp_pp.h"
 
 #ifdef SNMP_PP_NAMESPACE
@@ -84,8 +85,8 @@ void idea_cfb_encrypt(IDEAContext *c, unsigned char *iv, unsigned char *dest,
 void idea_cfb_decrypt(IDEAContext *c, unsigned char *iv, unsigned char *dest,
 		      const unsigned char *src, unsigned int len);
 
-#endif /* IDEA_H */
-#endif /* _USE_IDEA */
+#endif // _USE_IDEA
+#endif // _SNMP_IDEA_H_
 
 #ifdef SNMP_PP_NAMESPACE
 } // end of namespace Snmp_pp
@@ -110,8 +111,8 @@ Macros for storing and retrieving data in msb first and lsb first order.
 namespace Snmp_pp {
 #endif
 
-#ifndef GETPUT_H
-#define GETPUT_H
+#ifndef _SNMP_GETPUT_H_
+#define _SNMP_GETPUT_H_
 
 #ifdef _USE_IDEA
 
@@ -163,5 +164,4 @@ namespace Snmp_pp {
 } // end of namespace Snmp_pp
 #endif 
 
-#endif /* GETPUT_H */
-
+#endif // _SNMP_GETPUT_H_

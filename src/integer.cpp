@@ -49,7 +49,7 @@
   DESCRIPTION:
   Class implemtation for SMI Integer classes.
 =====================================================================*/
-char integer_cpp_version[]="#(@) SNMP++ $Id: integer.cpp 2361 2013-05-09 22:15:06Z katz $";
+char integer_cpp_version[]="#(@) SNMP++ $Id: integer.cpp 3169 2016-09-26 20:45:41Z katz $";
 
 #include <libsnmp.h>
 
@@ -57,39 +57,6 @@ char integer_cpp_version[]="#(@) SNMP++ $Id: integer.cpp 2361 2013-05-09 22:15:0
 
 #ifdef SNMP_PP_NAMESPACE
 namespace Snmp_pp {
-#endif
-
-#if 0
-// constructor no value
-SnmpUInt32::SnmpUInt32() : valid_flag(true), m_changed(true)
-{
-  smival.value.uNumber = 0;
-  smival.syntax = sNMP_SYNTAX_UINT32;
-}
-
-// constructor with value
-SnmpUInt32::SnmpUInt32 (const unsigned long i)
-  : valid_flag(true), m_changed(true)
-{
-  smival.value.uNumber = i;
-  smival.syntax = sNMP_SYNTAX_UINT32;
-}
-
-// copy constructor
-SnmpUInt32::SnmpUInt32(const SnmpUInt32 &c) : valid_flag(true), m_changed(true)
-{
-  smival.value.uNumber=c.smival.value.uNumber;
-  smival.syntax = sNMP_SYNTAX_UINT32;
-}
-
-// overloaded assignment
-SnmpUInt32& SnmpUInt32::operator=(const unsigned long i)
-{
-  smival.value.uNumber = i;
-  valid_flag = true;
-  m_changed = true;
-  return *this;
-}
 #endif
 
 // general assignment from any Value
@@ -119,19 +86,6 @@ SnmpSyntax& SnmpUInt32::operator=(const SnmpSyntax &in_val)
   m_changed = true;
   return *this;
 }
-
-#if 0
-// overloaded assignment
-SnmpUInt32& SnmpUInt32::operator=(const SnmpUInt32 &uli)
-{
-  if (this == &uli) return *this;  // check for self assignment
-
-  smival.value.uNumber = uli.smival.value.uNumber;
-  valid_flag = uli.valid_flag;
-  m_changed = true;
-  return *this;
-}
-#endif
 
 // ASCII format return
 const char *SnmpUInt32::get_printable() const
@@ -166,49 +120,6 @@ int SnmpUInt32::get_asn1_length() const
 //====================================================================
 //  INT 32 Implementation
 //====================================================================
-
-#if 0
-// constructor no value
-SnmpInt32::SnmpInt32() : valid_flag(true), m_changed(true)
-{
-  smival.value.sNumber = 0;
-  smival.syntax = sNMP_SYNTAX_INT32;
-}
-
-// constructor with value
-SnmpInt32::SnmpInt32(const long i) : valid_flag(true), m_changed(true)
-{
-  smival.value.sNumber = i;
-  smival.syntax = sNMP_SYNTAX_INT32;
-}
-
-// constructor with value
-SnmpInt32::SnmpInt32(const SnmpInt32 &c) : valid_flag(true), m_changed(true)
-{
-  smival.value.sNumber = c.smival.value.sNumber;
-  smival.syntax = sNMP_SYNTAX_INT32;
-}
-
-// overloaded assignment
-SnmpInt32& SnmpInt32::operator=(const long i)
-{
-  smival.value.sNumber = (unsigned long) i;
-  valid_flag = true;
-  m_changed = true;
-  return *this;
-}
-
-// overloaded assignment
-SnmpInt32& SnmpInt32::operator=(const SnmpInt32 &uli)
-{
-  if (this == &uli) return *this;  // check for self assignment
-
-  smival.value.sNumber = uli.smival.value.sNumber;
-  valid_flag = uli.valid_flag;
-  m_changed = true;
-  return *this;
-}
-#endif
 
 // general assignment from any Value
 SnmpSyntax& SnmpInt32::operator=(const SnmpSyntax &in_val)

@@ -49,7 +49,7 @@
   DESCRIPTION:
   Class implementation for SMI Counter32 class.
 =====================================================================*/
-char counter_cpp_version[]="@(#) SNMP++ $Id: counter.cpp 2361 2013-05-09 22:15:06Z katz $";
+char counter_cpp_version[]="@(#) SNMP++ $Id: counter.cpp 3169 2016-09-26 20:45:41Z katz $";
 
 #include <libsnmp.h>
 
@@ -60,14 +60,6 @@ namespace Snmp_pp {
 #endif
 
 #if 0
-// copy constructor
-Counter32::Counter32(const Counter32 &c) : SnmpUInt32()
-{
-  smival.value.uNumber = c.smival.value.uNumber;
-  smival.syntax = sNMP_SYNTAX_CNTR32;
-  valid_flag = c.valid_flag;
-}
-
 // general assignment from any Value
 SnmpSyntax& Counter32::operator=(const SnmpSyntax &in_val)
 {

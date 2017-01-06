@@ -49,7 +49,7 @@
   DESCRIPTION:
   Class implemtation for SMI Gauge32 class.
 =====================================================================*/
-char gauge_cpp_version[]="@(#) SNMP++ $Id: gauge.cpp 2361 2013-05-09 22:15:06Z katz $";
+char gauge_cpp_version[]="@(#) SNMP++ $Id: gauge.cpp 3169 2016-09-26 20:45:41Z katz $";
 
 #include <libsnmp.h>
 
@@ -57,17 +57,6 @@ char gauge_cpp_version[]="@(#) SNMP++ $Id: gauge.cpp 2361 2013-05-09 22:15:06Z k
 
 #ifdef SNMP_PP_NAMESPACE
 namespace Snmp_pp {
-#endif
-
-#if 0
-// copy constructor
-Gauge32::Gauge32(const Gauge32 &g32)
-  : SnmpUInt32()
-{
-  smival.value.uNumber = g32.smival.value.uNumber;
-  valid_flag = g32.valid_flag;
-  smival.syntax = sNMP_SYNTAX_GAUGE32;
-}
 #endif
 
 #ifdef SNMP_PP_NAMESPACE

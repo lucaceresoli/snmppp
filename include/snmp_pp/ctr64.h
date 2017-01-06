@@ -50,10 +50,10 @@
   DESCRIPTION:        SNMP Counter64 class definition.
 
 =====================================================================*/
-// $Id: ctr64.h 2359 2013-05-09 20:07:01Z fock $
+// $Id: ctr64.h 3169 2016-09-26 20:45:41Z katz $
 
-#ifndef _CTR64
-#define _CTR64
+#ifndef _SNMP_CTR64_H_
+#define _SNMP_CTR64_H_
 
 #include "snmp_pp/smival.h"
 
@@ -78,19 +78,7 @@ class DLLOPT Counter64: public  SnmpSyntax
  public:
 
   //-----------[ Constructors and Destrucotr ]----------------------
-#if 0
-  /**
-   * Constructs a valid Couter64 with value 0.
-   */
-  Counter64();
 
-  /**
-   * Constructs a valid Counter64 with the given value as the lower 32 bits.
-   *
-   * @param lo - value (0..MAX_UINT32)
-   */
-  Counter64(unsigned long lo);
-#endif
   /**
    * Constructs a valid Counter64 with the given values.
    *
@@ -134,33 +122,6 @@ class DLLOPT Counter64: public  SnmpSyntax
    * Destructor (ensure that SnmpSyntax::~SnmpSyntax() is overridden).
    */
   ~Counter64() {}
-
-#if 0
-  //-----------[ conversion from/to unsigned long long ]----------------
-
-  /**
-   * Get the value of the object as 64 bit integer.
-   *
-   * @param c64 - The Counter64 object whose value should be returned
-   * @return value as a unsigned 64 bit integer
-   */
-  static pp_uint64 c64_to_ll(const Counter64 &c64);
-
-  /**
-   * Get the value of this object as 64 bit integer.
-   *
-   * @return value as a unsigned 64 bit integer
-   */
-  pp_uint64 c64_to_ll() const;
-
-  /**
-   * Convert a 64 bit integer to a Counter64.
-   *
-   * @param ld - the value to convert
-   * @return A Counter64 object with the value of the param ld.
-   */
-  static Counter64 ll_to_c64(const pp_uint64 &ll);
-#endif
 
   operator pp_uint64 () const
   {
@@ -286,84 +247,6 @@ class DLLOPT Counter64: public  SnmpSyntax
     return *this;
   }
 
-#if 0
-  /**
-   * Add two Counter64.
-   */
-  Counter64 operator+(const Counter64 &c) const;
-
-  /**
-   * Add a unsigned long and a Counter64.
-   */
-  DLLOPT friend Counter64 operator+(unsigned long ul, const Counter64 &c64)
-    { return Counter64(ul) + c64; };
-
-  /**
-   * Subtract two Counter64.
-   */
-  Counter64 operator-(const Counter64 &c) const;
-
-  /**
-   * Subtract a unsigned long and a Counter64.
-   */
-  DLLOPT friend Counter64 operator-(unsigned long ul, const Counter64 &c64)
-    { return Counter64(ul) - c64; };
-
-  /**
-   * Multiply two Counter64.
-   */
-  Counter64 operator*(const Counter64 &c) const;
-
-  /**
-   * Multiply a unsigned long and a Counter64.
-   */
-  DLLOPT friend Counter64 operator*(unsigned long ul, const Counter64 &c64)
-    { return Counter64(ul) * c64; };
-
-  /**
-   * Divide two Counter64.
-   */
-  Counter64 operator/(const Counter64 &c) const;
-
-  /**
-   * Divide a unsigned long and a Counter64.
-   */
-  DLLOPT friend Counter64 operator/(unsigned long ul, const Counter64 &c64)
-    { return Counter64(ul) / c64; };
-
-  //-------[ overloaded comparison operators ]--------------
-
-  /**
-   * Equal operator for two Cunter64.
-   */
-  DLLOPT friend bool operator==(const Counter64 &lhs, const Counter64 &rhs);
-
-  /**
-   * Not equal operator for two Cunter64.
-   */
-  DLLOPT friend bool operator!=(const Counter64 &lhs, const Counter64 &rhs);
-
-  /**
-   * Less than operator for two Cunter64.
-   */
-  DLLOPT friend bool operator<(const Counter64 &lhs, const Counter64 &rhs);
-
-  /**
-   * Less than or equal operator for two Cunter64.
-   */
-  DLLOPT friend bool operator<=(const Counter64 &lhs, const Counter64 &rhs);
-
-  /**
-   * Greater than operator for two Cunter64.
-   */
-  DLLOPT friend bool operator>(const Counter64 &lhs, const Counter64 &rhs);
-
-  /**
-   * Greater than or equal operator for two Cunter64.
-   */
-  DLLOPT friend bool operator>=(const Counter64 &lhs, const Counter64 &rhs);
-#endif
-
  protected:
 
   SNMP_PP_MUTABLE char output_buffer[CTR64OUTBUF];
@@ -374,4 +257,4 @@ class DLLOPT Counter64: public  SnmpSyntax
 } // end of namespace Snmp_pp
 #endif 
 
-#endif
+#endif // _SNMP_CTR64_H_

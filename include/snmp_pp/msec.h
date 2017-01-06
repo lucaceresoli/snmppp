@@ -39,27 +39,18 @@
   or implied. User hereby grants a royalty-free license to any and all
   derivatives based upon this software code base.
 */
-// $Id: msec.h 2359 2013-05-09 20:07:01Z fock $
+// $Id: msec.h 3167 2016-09-26 18:52:43Z katz $
 
-#ifndef _MSEC_H_
-#define _MSEC_H_
+#ifndef _SNMP_MSEC_H_
+#define _SNMP_MSEC_H_
 
 //----[ includes ]-----------------------------------------------------
-#include <sys/types.h> /* NOTE: due to 10.10 bug, order is important
-			* in that all routines must include types.h
-			* and time.h in same order otherwise you will
-			* get conflicting definitions of "fd_set"
-			* resulting in link time errors.
-			*/
+#include <libsnmp.h>
+
 #ifdef WIN32
 #elif defined (CPU) && CPU == PPC603
 #include <sys/times.h>
-#else
-#include <sys/time.h>
-#include <sys/param.h>
 #endif
-
-#include <time.h>
 
 #include "snmp_pp/config_snmp_pp.h"
 #include "snmp_pp/smi.h"
@@ -184,4 +175,4 @@ private:
 } // end of namespace Snmp_pp
 #endif 
 
-#endif // _MSEC_H_
+#endif // _SNMP_MSEC_H_

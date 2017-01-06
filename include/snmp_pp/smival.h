@@ -53,12 +53,13 @@
   only a few functions, most info is in subclass.
 
 =====================================================================*/
-// $Id: smival.h 2359 2013-05-09 20:07:01Z fock $
+// $Id: smival.h 3164 2016-09-23 21:30:38Z katz $
 
-#ifndef _SMIVALUE
-#define _SMIVALUE
+#ifndef _SNMP_SMIVAL_H_
+#define _SNMP_SMIVAL_H_
 
 //----[ includes ]-----------------------------------------------------
+#include <libsnmp.h>
 #include "snmp_pp/smi.h"
 
 #ifdef SNMP_PP_NAMESPACE
@@ -148,13 +149,8 @@ public:
 
   /**
    * Overloaded assignment operator.
-   *
-   * @note This should be pure virtual, but buggy VC++ compiler
-   *       complains about unresolved reference at link time.
-   *       XXX probably happens because it's not implemented in
-   *           all derived classes?
    */
-  virtual SnmpSyntax& operator = (const SnmpSyntax &/*val*/) = 0;
+  virtual SnmpSyntax& operator = (const SnmpSyntax &val) = 0;
 
   /**
    * Return validity of the object.
@@ -183,4 +179,4 @@ protected:
 } // end of namespace Snmp_pp
 #endif 
 
-#endif  // _SMIVALUE
+#endif  // _SNMP_SMIVAL_H_

@@ -49,10 +49,10 @@
 
       DESIGN + AUTHOR:        Peter E Mellquist
 =====================================================================*/
-// $Id: oid_def.h 2359 2013-05-09 20:07:01Z fock $
+// $Id: oid_def.h 3167 2016-09-26 18:52:43Z katz $
 
-#ifndef _OID_DEF
-#define _OID_DEF
+#ifndef _SNMP_OID_DEF_H_
+#define _SNMP_OID_DEF_H_
 
 #include "snmp_pp/oid.h"
 
@@ -113,4 +113,4 @@ class egpNeighborLossOid: public snmpTrapsOid {
 } // end of namespace Snmp_pp
 #endif 
 
-#endif // _OID_DEF
+#endif // _SNMP_OID_DEF_H_

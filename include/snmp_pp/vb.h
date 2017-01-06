@@ -55,10 +55,10 @@
   DESIGN + AUTHOR:  Peter E. Mellquist
 
 =====================================================================*/
-// $Id: vb.h 2359 2013-05-09 20:07:01Z fock $
+// $Id: vb.h 3167 2016-09-26 18:52:43Z katz $
 
-#ifndef _VB_CLS
-#define _VB_CLS
+#ifndef _SNMP_VB_H_
+#define _SNMP_VB_H_
 
 #include "snmp_pp/oid.h"                 // oid class def
 #include "snmp_pp/timetick.h"            // time ticks
@@ -438,4 +438,4 @@ class DLLOPT Vb
 } // end of namespace Snmp_pp
 #endif 
 
-#endif
+#endif // _SNMP_VB_H_

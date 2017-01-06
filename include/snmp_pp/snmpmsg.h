@@ -51,13 +51,13 @@
   ASN.1	encoding / decoding class
       		
 =====================================================================*/
-// $Id: snmpmsg.h 2359 2013-05-09 20:07:01Z fock $
+// $Id: snmpmsg.h 3167 2016-09-26 18:52:43Z katz $
 
-#ifndef _SNMPMSG
-#define _SNMPMSG
+#ifndef _SNMP_SNMPMSG_H_
+#define _SNMP_SNMPMSG_H_
 
+#include <libsnmp.h>
 #include "snmp_pp/config_snmp_pp.h"
-
 #include "snmp_pp/smival.h"
 #include "snmp_pp/pdu.h"
 #include "snmp_pp/target.h"
@@ -165,4 +165,4 @@ protected:
 } // end of namespace Snmp_pp
 #endif 
 
-#endif  // _SNMPMSG
+#endif  // _SNMP_SNMPMSG_H_

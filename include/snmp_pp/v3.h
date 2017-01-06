@@ -24,14 +24,14 @@
   _##  upon this software code base. 
   _##  
   _##########################################################################*/
-// $Id: v3.h 2359 2013-05-09 20:07:01Z fock $
+// $Id: v3.h 3164 2016-09-23 21:30:38Z katz $
 
-#ifndef _V3_H
-#define _V3_H
+#ifndef _SNMP_V3_H_
+#define _SNMP_V3_H_
 
-#include <stdio.h>
 #include <stdarg.h>
 
+#include <libsnmp.h>
 #include "snmp_pp/config_snmp_pp.h"
 
 #ifdef SNMP_PP_NAMESPACE
@@ -270,4 +270,4 @@ template <class T> class Buffer
 } // end of namespace Snmp_pp
 #endif 
 
-#endif // _V3_H
+#endif // _SNMP_IDEA_H_

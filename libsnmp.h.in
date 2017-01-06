@@ -31,14 +31,14 @@
 #include <config.h>
 #endif
 
-#if 1
+#if @CNF_HAVE_SYS_TYPES_H@
 # include <sys/types.h>
 #endif
-#if 1
+#if @CNF_HAVE_SYS_STAT_H@
 # include <sys/stat.h>
 #endif
 
-#if 1
+#if @CNF_STDCXX_98_HEADERS@
 # include <cctype>
 # include <cerrno>
 # include <climits>
@@ -50,121 +50,121 @@
 # include <ctime>
 #else
 # include <stdio.h>
-# if 1
+# if @CNF_STDC_HEADERS@
 #  include <stdlib.h>
 #  include <stddef.h>
 # else
-#  if 1
+#  if @CNF_HAVE_STDLIB_H@
 #   include <stdlib.h>
 #  endif
 # endif
-# if 1
-#  if !1 && 1
+# if @CNF_HAVE_STRING_H@
+#  if !@CNF_STDC_HEADERS@ && @CNF_HAVE_MEMORY_H@
 #   include <memory.h>
 #  endif
 #  include <string.h>
 # endif
-# if 1
+# if @CNF_HAVE_STRINGS_H@
 #  include <strings.h>
 # endif
-# if 1
+# if @CNF_HAVE_INTTYPES_H@
 #  include <inttypes.h>
 # endif
-# if 1
+# if @CNF_HAVE_CTYPE_H@
 #  include <ctype.h>
 # endif
-# if 1
+# if @CNF_HAVE_SIGNAL_H@
 #  include <signal.h>
 # endif
-# if 1
+# if @CNF_HAVE_ERRNO_H@
 #  include <errno.h>
 # endif
-# if 1
+# if @CNF_HAVE_TIME_H@
 #  include <time.h>
 #endif
 #endif
 
-#if 1
+#if @CNF_HAVE_UNISTD_H@
 # include <unistd.h>
 #else
-# if 1
+# if @CNF_HAVE_SYS_UNISTD_H@
 #  include <sys/unistd.h>
 # endif
 #endif
 
-#if 1
+#if @CNF_HAVE_STDINT_H@
 # include <stdint.h>
 #endif
 
-#if 1
+#if @CNF_HAVE_SYS_TIME_H@
 #include <sys/time.h>
 #endif
-#if 1
+#if @CNF_HAVE_SYS_PARAM_H@
 #include <sys/param.h>
 #endif
-#if 1
+#if @CNF_HAVE_SYS_TIMEB_H@
 #include <sys/timeb.h> // and _ftime
 #endif
 
-#if 0
+#if @CNF_HAVE_WINSOCK2_H@
 # include <winsock2.h>
-# if 0
+# if @CNF_HAVE_WS2TCPIP_H@
 #  include <ws2tcpip.h>
 # endif
-# if 0
+# if @CNF_HAVE_WSPIAPI_H@
 #  include <wspiapi.h>
 # endif
-#elif 0
+#elif @CNF_HAVE_WINSOCK_H@
   /* IIRC winsock.h must be included before windows.h */
 # include <winsock.h>
 #else
-# if 1
+# if @CNF_HAVE_NETDB_H@
 #  include <netdb.h>
 # endif
-# if 1
+# if @CNF_HAVE_SYS_SOCKET_H@
 #  include <sys/socket.h>
 # endif
-# if 1
+# if @CNF_HAVE_ARPA_INET_H@
 #  include <arpa/inet.h>
 # endif
-# if 1
+# if @CNF_HAVE_NETINET_IN_H@
 #  include <netinet/in.h>
 # endif
 #endif
 
-#if 1
+#if @CNF_HAVE_POLL_H@
 # include <poll.h>
 #endif
-#if 1
+#if @CNF_HAVE_SYS_SELECT_H@
 # include <sys/select.h>
 #endif
 
 #ifdef _WIN32
-# if 0
+# if @CNF_HAVE_IO_H@
 #  include <io.h>
 # endif
-# if 0
+# if @CNF_HAVE_PROCESS_H@
 #  include <process.h>
 # endif
 # include <windows.h>
 #endif
 
-#if ! 1
-# if 0
+#if ! @CNF_HAVE_STRCASECMP@
+# if @CNF_HAVE_STRICMP@
 #  define strcasecmp stricmp
 # else
 extern "C" int strcasecmp(const char *s1, const char *s2);
 # endif
 #endif
 
-#if ! 1
-# if 0
+#if ! @CNF_HAVE_GETPID@
+# if @CNF_HAVE__GETPID@
 #  define getpid _getpid
 # endif
 #endif
 
-#if !  1
-# if 0
+#if !  @CNF_HAVE_STRUCT_SOCKADDR_STORAGE_SS_FAMILY@
+# if @CNF_HAVE_STRUCT_SOCKADDR_STORAGE___SS_FAMILY@
 #  define ss_family __ss_family
 # endif
 #endif
@@ -214,13 +214,13 @@ extern "C" int strcasecmp(const char *s1, const char *s2);
 #define NULL	0
 #endif
 
-#if 1
+#if @CNF_STDCXX_98_HEADERS@
 # include <iostream>
 #else
 # include <iostream.h>
 #endif
 
-#if 1
+#if @CNF_HAVE_NAMESPACE_STD@
 using namespace std;
 #endif
 

@@ -52,11 +52,12 @@
   Data Unit (PDU) in C++.
 
 =====================================================================*/
-// $Id: pdu.h 2359 2013-05-09 20:07:01Z fock $
+// $Id: pdu.h 3164 2016-09-23 21:30:38Z katz $
 
-#ifndef _PDU_CLS
-#define _PDU_CLS
+#ifndef _SNMP_PDU_H_
+#define _SNMP_PDU_H_
 
+#include <libsnmp.h>
 #include "snmp_pp/config_snmp_pp.h"
 #include "snmp_pp/address.h"
 #include "snmp_pp/timetick.h"
@@ -522,4 +523,4 @@ class DLLOPT Pdu
 } // end of namespace Snmp_pp
 #endif 
 
-#endif //_PDU_CLS
+#endif // _SNMP_PDU_H_

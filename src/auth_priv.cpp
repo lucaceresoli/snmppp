@@ -24,7 +24,7 @@
   _##  upon this software code base.
   _##
   _##########################################################################*/
-char auth_priv_version[]="@(#) SNMP++ $Id: auth_priv.cpp 2999 2016-02-04 20:46:55Z katz $";
+char auth_priv_version[]="@(#) SNMP++ $Id: auth_priv.cpp 3179 2016-10-17 20:06:26Z katz $";
 
 #include <libsnmp.h>
 
@@ -91,34 +91,34 @@ typedef MD5_CTX               MD5HashStateType;
 #define MD5_PROCESS(s, p, l)  MD5_Update(s, p, l)
 #define MD5_DONE(s, k)        MD5_Final(k, s)
 
-typedef des_key_schedule      DESCBCType;
+typedef DES_key_schedule      DESCBCType;
 #define DES_CBC_START_ENCRYPT(c, iv, k, kl, r, s) \
-                 if (des_key_sched((C_Block*)(k), s) < 0) \
-                 { \
-                   debugprintf(0, "Starting DES encryption failed."); \
-                   return SNMPv3_USM_ERROR; \
-                 }
+          if (DES_key_sched((const_DES_cblock*)(k), &(s)) < 0)  \
+          { \
+            debugprintf(0, "Starting DES encryption failed."); \
+            return SNMPv3_USM_ERROR; \
+          }
 #define DES_CBC_START_DECRYPT(c, iv, k, kl, r, s) \
-                 if (des_key_sched((C_Block*)(k), s) < 0) \
-                 { \
-                   debugprintf(0, "Starting DES decryption failed."); \
-                   return SNMPv3_USM_ERROR; \
-                 }
+          if (DES_key_sched((const_DES_cblock*)(k), &(s)) < 0) \
+          { \
+             debugprintf(0, "Starting DES decryption failed."); \
+             return SNMPv3_USM_ERROR; \
+          }
 
 #define DES_CBC_ENCRYPT(pt, ct, s, iv, l) \
-                        des_ncbc_encrypt(pt, ct, l, \
-                                         s, (C_Block*)(iv), DES_ENCRYPT)
+          DES_ncbc_encrypt(pt, ct, l, \
+			   &(s), (const_DES_cblock*)(iv), DES_ENCRYPT)
 #define DES_CBC_DECRYPT(ct, pt, s, iv, l) \
-                        des_ncbc_encrypt(ct, pt, l, \
-                                         s, (C_Block*)(iv), DES_DECRYPT)
+          DES_ncbc_encrypt(ct, pt, l, \
+			   &(s), (const_DES_cblock*)(iv), DES_DECRYPT)
 
 #define DES_EDE3_CBC_ENCRYPT(pt, ct, l, k1, k2, k3, iv) \
-               des_ede3_cbc_encrypt(pt, ct, l, \
-                                    k1, k2, k3, (C_Block*)(iv), DES_ENCRYPT)
+          DES_ede3_cbc_encrypt(pt, ct, l, \
+			       &(k1), &(k2), &(k3), (const_DES_cblock*)(iv), DES_ENCRYPT)
 
 #define DES_EDE3_CBC_DECRYPT(ct, pt, l, k1, k2, k3, iv) \
-               des_ede3_cbc_encrypt(ct, pt, l, \
-                                    k1, k2, k3, (C_Block*)(iv), DES_DECRYPT)
+          DES_ede3_cbc_encrypt(ct, pt, l, \
+			       &(k1), &(k2), &(k3), (const_DES_cblock*)(iv), DES_DECRYPT)
 
 #define DES_MEMSET(s, c, l)   memset(&(s), c, l)
 
@@ -1899,13 +1899,9 @@ Priv3DES_EDE::encrypt(const unsigned char *key,
 #else
   DESCBCType ks1, ks2, ks3;
 
-  if ((des_key_sched((C_Block*)(key),     ks1) < 0) ||
-      (des_key_sched((C_Block*)(key +8),  ks2) < 0) ||
-      (des_key_sched((C_Block*)(key +16), ks3) < 0))
-  {
-      debugprintf(0, "Starting 3DES-EDE encryption failed.");
-      return SNMPv3_USM_ERROR;
-  }
+  DES_CBC_START_ENCRYPT(unused, unused, key, unused, unused, ks1);
+  DES_CBC_START_ENCRYPT(unused, unused, key+8, unused, unused, ks2);
+  DES_CBC_START_ENCRYPT(unused, unused, key+16, unused, unused, ks3);
 
   if (buffer_len >= 8)
     for(unsigned int k = 0; k <= (buffer_len - 8); k += 8)
@@ -1996,13 +1992,9 @@ Priv3DES_EDE::decrypt(const unsigned char *key,
 #else
   DESCBCType ks1, ks2, ks3;
 
-  if ((des_key_sched((C_Block*)(key),     ks1) < 0) ||
-      (des_key_sched((C_Block*)(key+8),  ks2) < 0) ||
-      (des_key_sched((C_Block*)(key+16), ks3) < 0))
-    {
-      debugprintf(0, "Starting 3DES-EDE decryption failed.");
-      return SNMPv3_USM_ERROR;
-    }
+  DES_CBC_START_DECRYPT(unused, unused, key, unused, unused, ks1);
+  DES_CBC_START_DECRYPT(unused, unused, key+8, unused, unused, ks2);
+  DES_CBC_START_DECRYPT(unused, unused, key+16, unused, unused, ks3);
 
   for(unsigned int k=0; k<buffer_len; k+=8 )
     {
@@ -2130,8 +2122,6 @@ bool Priv3DES_EDE::test()
 
 #endif // _USE_3DES_EDE
 
-
-#if defined(_USE_OPENSSL)
 
 /* ----------------------- AuthSHABase ----------------------------------*/
 
@@ -2350,6 +2340,7 @@ AuthSHABase::Hasher *AuthSHA::get_hasher() const
   return new HasherSHA1();
 }
 
+#if defined(_USE_OPENSSL)
 
 class AuthHMAC128SHA224::Hasher224 : public AuthSHABase::Hasher
 {

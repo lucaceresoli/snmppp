@@ -24,11 +24,12 @@
   _##  upon this software code base.
   _##
   _##########################################################################*/
-// $Id: auth_priv.h 2999 2016-02-04 20:46:55Z katz $
+// $Id: auth_priv.h 3179 2016-10-17 20:06:26Z katz $
 
-#ifndef _AUTH_PRIV_
-#define _AUTH_PRIV_
+#ifndef _SNMP_AUTH_PRIV_H_
+#define _SNMP_AUTH_PRIV_H_
 
+#include <libsnmp.h>
 #include "snmp_pp/config_snmp_pp.h"
 
 #ifdef _SNMPv3
@@ -783,6 +784,7 @@ public:
                        Auth                *auth);
 
   const char *get_id_string() const;
+  int get_id() const { return own_aes_type; }
 
   static int map_aes_type(const int t);
 
@@ -856,8 +858,6 @@ public:
 };
 
 #endif // _USE_3DES_EDE
-
-#if defined(_USE_OPENSSL)
 
 /**
  * Base class for SHA authentication modules.
@@ -936,6 +936,7 @@ protected:
   Hasher *get_hasher() const;
 };
 
+#if defined(_USE_OPENSSL)
 
 /**
  * Authentication module using SHA2 (usmHMAC128SHA224AuthProtocol).
@@ -1035,4 +1036,4 @@ protected:
 
 #endif // _SNMPv3
 
-#endif
+#endif // _SNMP_AUTH_PRIV_H_

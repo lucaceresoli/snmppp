@@ -24,7 +24,7 @@
   _##  upon this software code base. 
   _##  
   _##########################################################################*/
-char sha_cpp_version[]="#(@) SNMP++ $Id: sha.cpp 2361 2013-05-09 22:15:06Z katz $";
+char sha_cpp_version[]="#(@) SNMP++ $Id: sha.cpp 3179 2016-10-17 20:06:26Z katz $";
 
 #include <libsnmp.h>
 
@@ -122,7 +122,7 @@ static void SHATransform(SHA_CTX *ctx, const unsigned char *X)
 }
 
 
-void SHAInit(SHA_CTX *ctx)
+int SHAInit(SHA_CTX *ctx)
 {
 #if !defined(i386) && !defined(_IBMR2)
   union z_test {
@@ -155,13 +155,13 @@ void SHAInit(SHA_CTX *ctx)
       printf("ENDIAN-ness is SCREWED! (%0#lx)\n", z_t.ll);
   }
 #endif /* ~_IBMR2 & ~i386 */
+  return 1;
 }
 
-
-void SHAUpdate(SHA_CTX *ctx, const unsigned char *buf, unsigned int lenBuf)
+int SHAUpdate(SHA_CTX *ctx, const unsigned char *buf, unsigned int lenBuf)
 {
   /* Do we have any bytes? */
-  if (lenBuf == 0) return;
+  if (lenBuf == 0) return 1;
 
   /* Calculate buf len in bits and update the len count */
   ctx->count[0] += (lenBuf << 3);
@@ -200,10 +200,10 @@ void SHAUpdate(SHA_CTX *ctx, const unsigned char *buf, unsigned int lenBuf)
     memcpy(ctx->X, buf, lenBuf);
     ctx->index = lenBuf;
   }
+  return 1;
 }
 
-
-void SHAFinal(unsigned char *digest, SHA_CTX *ctx)
+int SHAFinal(unsigned char *digest, SHA_CTX *ctx)
 {
   int i;
   unsigned long int c0, c1;
@@ -246,7 +246,6 @@ void SHAFinal(unsigned char *digest, SHA_CTX *ctx)
   if (i >= 56) i = 120 - i; /* # of padding bytes needed */
   else i = 56 - i;
 
-
   SHAUpdate(ctx, padding, i);   /* Append the padding */
   SHAUpdate(ctx, truelen, 8);   /* Append the length  */
 
@@ -271,6 +270,7 @@ void SHAFinal(unsigned char *digest, SHA_CTX *ctx)
       ctx->h[4] >>= 8;
     }
 #endif /* _IBMR2 */
+  return 1;
 }
 
 #ifdef SNMP_PP_NAMESPACE

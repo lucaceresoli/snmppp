@@ -107,7 +107,7 @@ void LogEntry::init(void)
         pthread_t pid = pthread_self();
 	if (sizeof(pthread_t) == sizeof(long))
 	{
-	  add_integer(static_cast<long>(pid));
+	  add_integer(*(long*)(void*)(&pid));
 	}
 	else
 	{
